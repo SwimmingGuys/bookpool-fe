@@ -1,0 +1,61 @@
+import { BookOpen, Mail, Bookmark } from 'lucide-react'
+import Section from '@/components/ui/Section'
+import StaggerChildren from '@/components/ui/StaggerChildren'
+
+const features = [
+  {
+    icon: BookOpen,
+    title: '도서 공고 탐색',
+    description: '인기순, 최신순으로 서평단 모집 공고를 한눈에 확인하세요.',
+    gradient: 'from-orange-400 to-amber-300',
+    bgCard: 'bg-orange-50',
+  },
+  {
+    icon: Mail,
+    title: '메일로 소식 받기',
+    description: '관심 있는 도서 소식을 이메일로 빠르게 받아보세요.',
+    gradient: 'from-rose-400 to-pink-300',
+    bgCard: 'bg-rose-50',
+  },
+  {
+    icon: Bookmark,
+    title: '즐겨찾기',
+    description: '관심 있는 공고를 즐겨찾기하고 마이페이지에서 모아보세요.',
+    gradient: 'from-violet-400 to-purple-300',
+    bgCard: 'bg-violet-50',
+  },
+]
+
+export default function HowItWorks() {
+  return (
+    <Section
+      title="이런 것들을 할 수 있어요"
+      subtitle="Bookie에서 제공하는 핵심 기능을 소개합니다."
+      background="bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50"
+      blobs={[
+        { className: 'top-10 left-10 w-64 h-64 bg-orange-200/30' },
+        { className: 'bottom-10 right-10 w-80 h-80 bg-rose-200/20' },
+      ]}
+    >
+      <StaggerChildren
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+        staggerMs={150}
+      >
+        {features.map((feature) => (
+          <div
+            key={feature.title}
+            className={`group flex flex-col items-center text-center rounded-2xl ${feature.bgCard} p-8 hover:shadow-lg hover:-translate-y-2 transition-all duration-300`}
+          >
+            <div
+              className={`mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300`}
+            >
+              <feature.icon className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
+            <p className="text-sm text-gray-500 leading-relaxed">{feature.description}</p>
+          </div>
+        ))}
+      </StaggerChildren>
+    </Section>
+  )
+}
