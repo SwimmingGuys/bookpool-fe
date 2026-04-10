@@ -14,10 +14,10 @@ export default function FeaturedSection({ title, subtitle, recruitments }: Featu
     <Section
       title={title}
       subtitle={subtitle}
-      background="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50"
+      background="bg-amber-50/40"
       blobs={[
-        { className: '-top-10 -left-10 w-72 h-72 bg-orange-200/20' },
-        { className: 'bottom-0 right-0 w-96 h-96 bg-amber-200/20' },
+        { className: '-top-10 -left-10 w-72 h-72 bg-amber-100/20' },
+        { className: 'bottom-0 right-0 w-96 h-96 bg-orange-100/15' },
       ]}
     >
       <StaggerChildren className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

@@ -5,19 +5,19 @@ import SearchBar from './SearchBar'
 
 export default function Header() {
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
+    <header className="flex items-center justify-between px-6 py-2.5 bg-white border-b border-amber-100">
       <div className="flex items-center gap-8">
         <Logo />
         <nav className="hidden md:flex items-center gap-6">
           <Link
             to="/board"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900 no-underline"
+            className="text-sm font-medium text-stone-600 hover:text-amber-900 no-underline transition-colors"
           >
             보드
           </Link>
           <Link
             to="/notice"
-            className="text-sm font-medium text-gray-700 hover:text-gray-900 no-underline"
+            className="text-sm font-medium text-stone-600 hover:text-amber-900 no-underline transition-colors"
           >
             공지사항
           </Link>
@@ -28,12 +28,12 @@ export default function Header() {
         <SearchBar />
       </div>
 
-      <div className="flex items-center gap-4">
-        <button className="text-gray-500 hover:text-gray-700">
-          <Bell className="h-5 w-5" />
+      <div className="flex items-center gap-3">
+        <button className="p-2 rounded-lg text-stone-500 hover:text-amber-800 hover:bg-amber-50 transition-colors">
+          <Bell className="h-6 w-6" />
         </button>
-        <button className="text-gray-500 hover:text-gray-700">
-          <User className="h-5 w-5" />
+        <button className="p-2 rounded-lg text-stone-500 hover:text-amber-800 hover:bg-amber-50 transition-colors">
+          <User className="h-6 w-6" />
         </button>
       </div>
     </header>
