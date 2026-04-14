@@ -8,7 +8,7 @@ export default function DDay({ daysRemaining }: DDayProps) {
   }
 
   return (
-    <span className="text-sm font-bold text-amber-700">
+    <span className="text-sm font-bold text-orange-500">
       D-{daysRemaining}
     </span>
   )

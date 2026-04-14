@@ -17,7 +17,7 @@ export default function RecruitmentCard({ recruitment }: RecruitmentCardProps) {
         <DDay daysRemaining={daysRemaining} />
       </div>
 
-      <h3 className="text-base font-bold text-stone-800 leading-snug mb-3 whitespace-pre-line group-hover:text-amber-800 transition-colors duration-300 line-clamp-2 min-h-[2.75rem]">
+      <h3 className="text-base font-bold text-stone-800 leading-snug mb-3 whitespace-pre-line group-hover:text-orange-600 transition-colors duration-300 line-clamp-2 min-h-[2.75rem]">
         {title}
       </h3>
 

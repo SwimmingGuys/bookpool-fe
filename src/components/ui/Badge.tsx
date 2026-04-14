@@ -6,8 +6,8 @@ interface BadgeProps {
 }
 
 const badgeStyles: Record<string, string> = {
-  Reviewer: 'border-amber-300 text-amber-800 bg-amber-50',
-  'Beta Reader': 'border-orange-300 text-orange-800 bg-orange-50',
+  Reviewer: 'border-orange-200 text-orange-700 bg-orange-50',
+  'Beta Reader': 'border-stone-300 text-stone-600 bg-stone-50',
 }
 
 export default function Badge({ label, className }: BadgeProps) {
@@ -15,7 +15,7 @@ export default function Badge({ label, className }: BadgeProps) {
     <span
       className={cn(
         'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border',
-        badgeStyles[label] ?? 'border-stone-300 text-stone-700 bg-white',
+        badgeStyles[label] ?? 'border-gray-300 text-gray-600 bg-white',
         className,
       )}
     >
