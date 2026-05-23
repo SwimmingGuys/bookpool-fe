@@ -3,6 +3,8 @@ import { Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Recruitment } from '@/types/recruitment'
 import { useFavorites, useReadRecruitments } from '@/lib/recruitmentState'
+import { useAuth } from '@/lib/auth'
+import { showToast } from '@/lib/toast'
 import Badge from '@/components/ui/Badge'
 import DDay from '@/components/ui/DDay'
 
@@ -41,6 +43,7 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
 
   const { isRead, markAsRead } = useReadRecruitments()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { isLoggedIn } = useAuth()
   const read = isRead(id)
   const fav = isFavorite(id)
   const isClosed = status === 'closed'
@@ -49,6 +52,10 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
   const handleStarClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
+    if (!isLoggedIn) {
+      showToast('로그인이 필요한 서비스입니다.', 'warning')
+      return
+    }
     toggleFavorite(id)
   }
 

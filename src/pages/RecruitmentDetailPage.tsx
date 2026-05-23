@@ -4,6 +4,8 @@ import { ArrowLeft, Calendar, Clock, Eye, Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { getRecruitmentById } from '@/data/mockRecruitments'
 import { useFavorites, useReadRecruitments } from '@/lib/recruitmentState'
+import { useAuth } from '@/lib/auth'
+import { showToast } from '@/lib/toast'
 import Badge from '@/components/ui/Badge'
 import DDay from '@/components/ui/DDay'
 
@@ -11,6 +13,15 @@ export default function RecruitmentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { markAsRead } = useReadRecruitments()
   const { isFavorite, toggleFavorite } = useFavorites()
+  const { isLoggedIn } = useAuth()
+
+  const handleToggleFavorite = (id: string) => {
+    if (!isLoggedIn) {
+      showToast('로그인이 필요한 서비스입니다.', 'warning')
+      return
+    }
+    toggleFavorite(id)
+  }
 
   const recruitment = useMemo(
     () => (id ? getRecruitmentById(id) : undefined),
@@ -58,7 +69,7 @@ export default function RecruitmentDetailPage() {
             </span>
             <button
               type="button"
-              onClick={() => toggleFavorite(recruitment.id)}
+              onClick={() => handleToggleFavorite(recruitment.id)}
               aria-label={fav ? '즐겨찾기 해제' : '즐겨찾기 추가'}
               aria-pressed={fav}
               className={cn(
