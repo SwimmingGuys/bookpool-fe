@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { useDismissOnOutside } from '@/lib/useDismissOnOutside'
 
 interface MonthYearPickerProps {
   year: number
@@ -16,26 +17,12 @@ export default function MonthYearPicker({
   const [open, setOpen] = useState(false)
   const [pickerYear, setPickerYear] = useState(year)
   const ref = useRef<HTMLDivElement>(null)
+  const close = useCallback(() => setOpen(false), [])
+  useDismissOnOutside(ref, open, close)
 
   useEffect(() => {
     if (open) setPickerYear(year)
   }, [open, year])
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false)
-    }
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', handler)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
 
   const selectMonth = (m: number) => {
     onChange(pickerYear, m)

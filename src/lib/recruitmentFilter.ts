@@ -16,6 +16,24 @@ export const emptyFilter: RecruitmentFilter = {
   deadline: 'all',
 }
 
+export const MAX_QUERY_LENGTH = 50
+const FORBIDDEN_QUERY_CHARS = /[<>"'`;]/
+
+export type QueryValidation =
+  | { ok: true; query: string }
+  | { ok: false; error: string }
+
+export function validateQuery(raw: string): QueryValidation {
+  const trimmed = raw.trim()
+  if (FORBIDDEN_QUERY_CHARS.test(trimmed)) {
+    return { ok: false, error: '허용되지 않는 특수문자가 포함되어 있습니다.' }
+  }
+  if (trimmed.length > MAX_QUERY_LENGTH) {
+    return { ok: false, error: `검색어는 ${MAX_QUERY_LENGTH}자 이하로 입력해주세요.` }
+  }
+  return { ok: true, query: trimmed }
+}
+
 export function filterRecruitments(
   recruitments: Recruitment[],
   filter: RecruitmentFilter,

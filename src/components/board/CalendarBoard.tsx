@@ -7,6 +7,7 @@ import {
   getDateByBasis,
   type DateBasis,
 } from '@/lib/dateBasis'
+import { TODAY_DATE, TODAY_ISO, WEEKDAY_LABELS_KO, toIsoDate } from '@/lib/date'
 import MonthYearPicker from './MonthYearPicker'
 
 interface CalendarBoardProps {
@@ -18,8 +19,6 @@ interface CalendarBoardProps {
   toolbar?: React.ReactNode
 }
 
-const WEEK_LABELS = ['일', '월', '화', '수', '목', '금', '토']
-const TODAY_ISO = '2026-05-23'
 const MAX_PREVIEW = 3
 
 export default function CalendarBoard({
@@ -30,10 +29,9 @@ export default function CalendarBoard({
   onChangeDateBasis,
   toolbar,
 }: CalendarBoardProps) {
-  const [cursor, setCursor] = useState(() => {
-    const today = new Date(TODAY_ISO)
-    return new Date(today.getFullYear(), today.getMonth(), 1)
-  })
+  const [cursor, setCursor] = useState(
+    () => new Date(TODAY_DATE.getFullYear(), TODAY_DATE.getMonth(), 1),
+  )
 
   const deadlineMap = useMemo(() => {
     const map = new Map<string, Recruitment[]>()
@@ -50,10 +48,8 @@ export default function CalendarBoard({
 
   const goPrev = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))
   const goNext = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
-  const goToday = () => {
-    const today = new Date(TODAY_ISO)
-    setCursor(new Date(today.getFullYear(), today.getMonth(), 1))
-  }
+  const goToday = () =>
+    setCursor(new Date(TODAY_DATE.getFullYear(), TODAY_DATE.getMonth(), 1))
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
@@ -126,7 +122,7 @@ export default function CalendarBoard({
       )}
 
       <div className="grid grid-cols-7 border-b border-stone-200">
-        {WEEK_LABELS.map((label, i) => (
+        {WEEKDAY_LABELS_KO.map((label, i) => (
           <div
             key={label}
             className={cn(
@@ -253,7 +249,7 @@ function buildMonthMatrix(cursor: Date): (DayCell | null)[] {
   const cells: (DayCell | null)[] = []
   for (let i = 0; i < firstDay; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) {
-    const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+    const iso = toIsoDate(year, month, d)
     cells.push({ day: d, iso, isToday: iso === TODAY_ISO })
   }
   while (cells.length % 7 !== 0) cells.push(null)

@@ -1,17 +1,14 @@
 import type { Recruitment, RecruitmentType } from '@/types/recruitment'
 import { CATEGORIES } from '@/types/recruitment'
+import { TODAY_DATE, toIsoDate } from '@/lib/date'
 
-const today = new Date('2026-05-23')
-const TODAY_TIME = today.getTime()
-const TARGET_YEAR = today.getFullYear()
-const TARGET_MONTH = today.getMonth()
+const TODAY_TIME = TODAY_DATE.getTime()
+const TARGET_YEAR = TODAY_DATE.getFullYear()
+const TARGET_MONTH = TODAY_DATE.getMonth()
 const DAYS_IN_MONTH = new Date(TARGET_YEAR, TARGET_MONTH + 1, 0).getDate()
 
 function toIso(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
+  return toIsoDate(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
 function addDaysToDate(date: Date, days: number): Date {

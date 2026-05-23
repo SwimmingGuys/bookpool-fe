@@ -10,6 +10,8 @@ import {
   emptyFilter,
   filterRecruitments,
   sortByDeadline,
+  validateQuery,
+  MAX_QUERY_LENGTH,
   type RecruitmentFilter,
 } from '@/lib/recruitmentFilter'
 import {
@@ -17,8 +19,6 @@ import {
   getDateBasisLabel,
   type DateBasis,
 } from '@/lib/dateBasis'
-
-const MAX_QUERY_LENGTH = 50
 
 export default function BoardPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -35,8 +35,8 @@ export default function BoardPage() {
 
   useEffect(() => {
     const q = searchParams.get('q') ?? ''
-    setFilter((prev) => ({ ...prev, query: q }))
-    setDraftQuery(q)
+    setFilter((prev) => (prev.query === q ? prev : { ...prev, query: q }))
+    setDraftQuery((prev) => (prev === q ? prev : q))
   }, [searchParams])
 
   const filteredByCondition = useMemo(
@@ -60,19 +60,15 @@ export default function BoardPage() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const trimmed = draftQuery.trim()
-    if (/[<>"'`;]/.test(trimmed)) {
-      setQueryError('허용되지 않는 특수문자가 포함되어 있습니다.')
-      return
-    }
-    if (trimmed.length > MAX_QUERY_LENGTH) {
-      setQueryError(`검색어는 ${MAX_QUERY_LENGTH}자 이하로 입력해주세요.`)
+    const result = validateQuery(draftQuery)
+    if (!result.ok) {
+      setQueryError(result.error)
       return
     }
     setQueryError(null)
 
     const next = new URLSearchParams(searchParams)
-    if (trimmed) next.set('q', trimmed)
+    if (result.query) next.set('q', result.query)
     else next.delete('q')
     setSearchParams(next, { replace: true })
   }

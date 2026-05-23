@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { createStore } from '@/lib/createStore'
 
 export type ToastVariant = 'info' | 'success' | 'warning' | 'error'
 
@@ -8,43 +9,42 @@ export interface Toast {
   variant: ToastVariant
 }
 
-const listeners = new Set<() => void>()
-let toasts: Toast[] = []
+const DEFAULT_DURATION_MS = 2400
+const EMPTY: Toast[] = []
+
+const toastStore = createStore<Toast[]>([])
+const timers = new Map<number, number>()
 let nextId = 1
 
-function emit() {
-  listeners.forEach((l) => l())
-}
-
-function subscribe(cb: () => void) {
-  listeners.add(cb)
-  return () => {
-    listeners.delete(cb)
-  }
-}
-
-function getSnapshot() {
-  return toasts
-}
-
-export function showToast(message: string, variant: ToastVariant = 'info', durationMs = 2400) {
+export function showToast(
+  message: string,
+  variant: ToastVariant = 'info',
+  durationMs = DEFAULT_DURATION_MS,
+): number {
   const id = nextId++
-  toasts = [...toasts, { id, message, variant }]
-  emit()
+  toastStore.set((prev) => [...prev, { id, message, variant }])
   if (typeof window !== 'undefined') {
-    window.setTimeout(() => {
-      toasts = toasts.filter((t) => t.id !== id)
-      emit()
+    const handle = window.setTimeout(() => {
+      timers.delete(id)
+      dismissToast(id)
     }, durationMs)
+    timers.set(id, handle)
   }
   return id
 }
 
-export function dismissToast(id: number) {
-  toasts = toasts.filter((t) => t.id !== id)
-  emit()
+export function dismissToast(id: number): void {
+  const handle = timers.get(id)
+  if (handle !== undefined) {
+    clearTimeout(handle)
+    timers.delete(id)
+  }
+  toastStore.set((prev) => {
+    const next = prev.filter((t) => t.id !== id)
+    return next.length === prev.length ? prev : next
+  })
 }
 
-export function useToasts() {
-  return useSyncExternalStore(subscribe, getSnapshot, () => [])
+export function useToasts(): Toast[] {
+  return useSyncExternalStore(toastStore.subscribe, toastStore.getSnapshot, () => EMPTY)
 }

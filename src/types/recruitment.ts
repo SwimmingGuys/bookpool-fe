@@ -2,6 +2,16 @@ export type RecruitmentType = 'Reviewer' | 'Beta Reader'
 
 export type RecruitmentStatus = 'open' | 'closed'
 
+export const RECRUITMENT_TYPE_LABELS: Record<RecruitmentType, string> = {
+  Reviewer: '서평단',
+  'Beta Reader': '베타리더',
+}
+
+export const RECRUITMENT_TYPE_OPTIONS: { value: RecruitmentType; label: string }[] = [
+  { value: 'Reviewer', label: RECRUITMENT_TYPE_LABELS.Reviewer },
+  { value: 'Beta Reader', label: RECRUITMENT_TYPE_LABELS['Beta Reader'] },
+]
+
 export const CATEGORIES = [
   'IT/개발',
   '소설',

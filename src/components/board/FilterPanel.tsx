@@ -1,6 +1,10 @@
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import { CATEGORIES, type RecruitmentType } from '@/types/recruitment'
+import {
+  CATEGORIES,
+  RECRUITMENT_TYPE_OPTIONS,
+  type RecruitmentType,
+} from '@/types/recruitment'
 import type { DeadlineFilter, RecruitmentFilter } from '@/lib/recruitmentFilter'
 import FilterDropdown, { type FilterColor } from './FilterDropdown'
 
@@ -13,15 +17,21 @@ const TYPE_COLOR: FilterColor = 'blue'
 const CATEGORY_COLOR: FilterColor = 'orange'
 const DEADLINE_COLOR: FilterColor = 'rose'
 
-const TYPE_OPTIONS: { value: RecruitmentType; label: string }[] = [
-  { value: 'Reviewer', label: '서평단' },
-  { value: 'Beta Reader', label: '베타리더' },
-]
+type DeadlineValue = Exclude<DeadlineFilter, 'all'>
 
-const DEADLINE_OPTIONS: { value: Exclude<DeadlineFilter, 'all'>; label: string }[] = [
+const DEADLINE_OPTIONS: { value: DeadlineValue; label: string }[] = [
   { value: 'week', label: '일주일 이내' },
   { value: 'imminent', label: '마감 임박 (D-3)' },
 ]
+
+const DEADLINE_LABELS: Record<DeadlineValue, string> = {
+  week: '일주일 이내',
+  imminent: '마감 임박 (D-3)',
+}
+
+const TYPE_LABELS: Record<RecruitmentType, string> = Object.fromEntries(
+  RECRUITMENT_TYPE_OPTIONS.map((o) => [o.value, o.label]),
+) as Record<RecruitmentType, string>
 
 const tagStyles: Record<FilterColor, string> = {
   orange: 'bg-orange-50/80 border-orange-200/70 text-orange-700',
@@ -35,24 +45,19 @@ const chipActiveStyles: Record<FilterColor, string> = {
   rose: 'border-rose-300 bg-rose-50/70 text-rose-700',
 }
 
+function toggleArray<T>(list: T[], value: T): T[] {
+  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
+}
+
 export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
-  const toggleCategory = (cat: string) => {
-    const next = filter.categories.includes(cat)
-      ? filter.categories.filter((c) => c !== cat)
-      : [...filter.categories, cat]
-    onChange({ ...filter, categories: next })
-  }
+  const toggleCategory = (cat: string) =>
+    onChange({ ...filter, categories: toggleArray(filter.categories, cat) })
 
-  const toggleType = (type: RecruitmentType) => {
-    const next = filter.types.includes(type)
-      ? filter.types.filter((t) => t !== type)
-      : [...filter.types, type]
-    onChange({ ...filter, types: next })
-  }
+  const toggleType = (type: RecruitmentType) =>
+    onChange({ ...filter, types: toggleArray(filter.types, type) })
 
-  const toggleDeadline = (value: Exclude<DeadlineFilter, 'all'>) => {
+  const toggleDeadline = (value: DeadlineValue) =>
     onChange({ ...filter, deadline: filter.deadline === value ? 'all' : value })
-  }
 
   const reset = () =>
     onChange({ ...filter, categories: [], types: [], deadline: 'all' })
@@ -65,9 +70,9 @@ export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
 
   const clearDeadline = () => onChange({ ...filter, deadline: 'all' })
 
-  const deadlineCount = filter.deadline === 'all' ? 0 : 1
+  const deadlineActive = filter.deadline !== 'all'
   const hasAny =
-    filter.categories.length > 0 || filter.types.length > 0 || deadlineCount > 0
+    filter.categories.length > 0 || filter.types.length > 0 || deadlineActive
 
   return (
     <div className="flex flex-col gap-2.5 items-start">
@@ -78,7 +83,7 @@ export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
           color={TYPE_COLOR}
         >
           <div className="flex flex-wrap gap-1.5">
-            {TYPE_OPTIONS.map((opt) => (
+            {RECRUITMENT_TYPE_OPTIONS.map((opt) => (
               <Chip
                 key={opt.value}
                 selected={filter.types.includes(opt.value)}
@@ -112,7 +117,7 @@ export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
 
         <FilterDropdown
           label="마감 조건"
-          selectedCount={deadlineCount}
+          selectedCount={deadlineActive ? 1 : 0}
           color={DEADLINE_COLOR}
         >
           <div className="flex flex-wrap gap-1.5">
@@ -138,7 +143,7 @@ export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
               color={TYPE_COLOR}
               onRemove={() => removeType(type)}
             >
-              {TYPE_OPTIONS.find((o) => o.value === type)?.label}
+              {TYPE_LABELS[type]}
             </SelectedTag>
           ))}
           {filter.categories.map((cat) => (
@@ -150,9 +155,9 @@ export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
               {cat}
             </SelectedTag>
           ))}
-          {filter.deadline !== 'all' && (
+          {deadlineActive && (
             <SelectedTag color={DEADLINE_COLOR} onRemove={clearDeadline}>
-              {DEADLINE_OPTIONS.find((o) => o.value === filter.deadline)?.label}
+              {DEADLINE_LABELS[filter.deadline as DeadlineValue]}
             </SelectedTag>
           )}
           <button

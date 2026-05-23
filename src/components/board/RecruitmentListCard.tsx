@@ -2,24 +2,16 @@ import { Link } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Recruitment } from '@/types/recruitment'
-import { useFavorites, useReadRecruitments } from '@/lib/recruitmentState'
-import { useAuth } from '@/lib/auth'
-import { showToast } from '@/lib/toast'
+import {
+  useFavoriteWithAuth,
+  useReadRecruitments,
+} from '@/lib/recruitmentState'
+import { formatMonthDay, getWeekdayKo } from '@/lib/date'
 import Badge from '@/components/ui/Badge'
 import DDay from '@/components/ui/DDay'
 
 interface RecruitmentListCardProps {
   recruitment: Recruitment
-}
-
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
-
-function formatMonthDay(iso: string): string {
-  return iso.slice(5).replace('-', '.')
-}
-
-function getWeekday(iso: string): string {
-  return WEEKDAY_LABELS[new Date(iso).getDay()]
 }
 
 function formatViewCount(count: number): string {
@@ -42,8 +34,7 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
   } = recruitment
 
   const { isRead, markAsRead } = useReadRecruitments()
-  const { isFavorite, toggleFavorite } = useFavorites()
-  const { isLoggedIn } = useAuth()
+  const { isFavorite, toggleFavorite } = useFavoriteWithAuth()
   const read = isRead(id)
   const fav = isFavorite(id)
   const isClosed = status === 'closed'
@@ -52,10 +43,6 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
   const handleStarClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!isLoggedIn) {
-      showToast('로그인이 필요한 서비스입니다.', 'warning')
-      return
-    }
     toggleFavorite(id)
   }
 
@@ -115,7 +102,7 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
             {formatMonthDay(recruitEndDate)}
           </span>
           <span className="text-[11px] text-stone-400">
-            ({getWeekday(recruitEndDate)}) 마감
+            ({getWeekdayKo(recruitEndDate)}) 마감
           </span>
         </div>
         <span className="text-[10px] text-stone-300 tabular-nums shrink-0">
