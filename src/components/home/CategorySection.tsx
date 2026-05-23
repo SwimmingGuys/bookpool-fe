@@ -1,20 +1,37 @@
-import { useState } from 'react'
-import { Code, Briefcase, Palette, Heart, Globe, GraduationCap } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Code, Briefcase, Palette, Heart, Globe, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import Section from '@/components/ui/Section'
 import StaggerChildren from '@/components/ui/StaggerChildren'
+import { mockRecruitments } from '@/data/mockRecruitments'
 
 const categories = [
-  { icon: Code, label: 'IT/개발', count: 24, color: 'from-stone-600 to-stone-700' },
-  { icon: Briefcase, label: '경영/경제', count: 18, color: 'from-stone-500 to-stone-600' },
-  { icon: Palette, label: '예술/디자인', count: 12, color: 'from-orange-500 to-orange-600' },
-  { icon: Heart, label: '자기계발', count: 31, color: 'from-stone-600 to-stone-700' },
-  { icon: Globe, label: '인문/사회', count: 15, color: 'from-stone-500 to-stone-600' },
-  { icon: GraduationCap, label: '학습/교육', count: 9, color: 'from-orange-500 to-orange-600' },
+  { icon: Code, label: 'IT/개발', color: 'from-stone-600 to-stone-700' },
+  { icon: Briefcase, label: '경제', color: 'from-stone-500 to-stone-600' },
+  { icon: Palette, label: '기획/디자인', color: 'from-orange-500 to-orange-600' },
+  { icon: Heart, label: '자기계발', color: 'from-stone-600 to-stone-700' },
+  { icon: Globe, label: '인문/사회', color: 'from-stone-500 to-stone-600' },
+  { icon: BookOpen, label: '소설', color: 'from-orange-500 to-orange-600' },
 ]
 
 export default function CategorySection() {
   const [selected, setSelected] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const countsByCategory = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const r of mockRecruitments) {
+      if (r.status !== 'open') continue
+      map.set(r.category, (map.get(r.category) ?? 0) + 1)
+    }
+    return map
+  }, [])
+
+  const handleClick = (label: string) => {
+    setSelected(selected === label ? null : label)
+    navigate(`/board?q=${encodeURIComponent(label)}`)
+  }
 
   return (
     <Section
@@ -29,33 +46,36 @@ export default function CategorySection() {
       <StaggerChildren
         className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto"
       >
-        {categories.map((cat) => (
-          <button
-            key={cat.label}
-            onClick={() => setSelected(selected === cat.label ? null : cat.label)}
-            className={cn(
-              'flex flex-col items-center gap-3 rounded-2xl border p-6 transition-all duration-300 cursor-pointer',
-              'hover:-translate-y-1 hover:shadow-lg',
-              selected === cat.label
-                ? 'border-orange-400 bg-white shadow-md scale-105'
-                : 'border-stone-200/60 bg-white/80 backdrop-blur-sm',
-            )}
-          >
-            <div
+        {categories.map((cat) => {
+          const count = countsByCategory.get(cat.label) ?? 0
+          return (
+            <button
+              key={cat.label}
+              onClick={() => handleClick(cat.label)}
               className={cn(
-                'w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-sm transition-transform duration-300',
-                cat.color,
-                selected === cat.label && 'scale-110',
+                'flex flex-col items-center gap-3 rounded-2xl border p-6 transition-all duration-300 cursor-pointer',
+                'hover:-translate-y-1 hover:shadow-lg',
+                selected === cat.label
+                  ? 'border-orange-400 bg-white shadow-md scale-105'
+                  : 'border-stone-200/60 bg-white/80 backdrop-blur-sm',
               )}
             >
-              <cat.icon className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-stone-700">{cat.label}</p>
-              <p className="text-xs text-stone-400 mt-0.5">{cat.count}건 모집중</p>
-            </div>
-          </button>
-        ))}
+              <div
+                className={cn(
+                  'w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-sm transition-transform duration-300',
+                  cat.color,
+                  selected === cat.label && 'scale-110',
+                )}
+              >
+                <cat.icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-stone-700">{cat.label}</p>
+                <p className="text-xs text-stone-400 mt-0.5">{count}건 모집중</p>
+              </div>
+            </button>
+          )
+        })}
       </StaggerChildren>
     </Section>
   )

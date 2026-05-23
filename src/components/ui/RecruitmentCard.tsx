@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Eye } from 'lucide-react'
 import type { Recruitment } from '@/types/recruitment'
 import Badge from './Badge'
@@ -8,10 +9,13 @@ interface RecruitmentCardProps {
 }
 
 export default function RecruitmentCard({ recruitment }: RecruitmentCardProps) {
-  const { badgeLabel, daysRemaining, title, publisher, category, viewCount } = recruitment
+  const { id, badgeLabel, daysRemaining, title, publisher, category, viewCount } = recruitment
 
   return (
-    <div className="group flex flex-col rounded-xl bg-white p-5 shadow-sm border border-stone-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full">
+    <Link
+      to={`/recruitments/${id}`}
+      className="group flex flex-col rounded-xl bg-white p-5 shadow-sm border border-stone-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full no-underline"
+    >
       <div className="flex items-center justify-between mb-4">
         <Badge label={badgeLabel} />
         <DDay daysRemaining={daysRemaining} />
@@ -29,6 +33,6 @@ export default function RecruitmentCard({ recruitment }: RecruitmentCardProps) {
         <Eye className="w-3.5 h-3.5" />
         <span>{viewCount.toLocaleString()}</span>
       </div>
-    </div>
+    </Link>
   )
 }

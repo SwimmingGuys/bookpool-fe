@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 
 export default function HeroBanner() {
   const [show, setShow] = useState(false)
@@ -27,9 +28,12 @@ export default function HeroBanner() {
           <br />
           책을 사랑하는 사람들과 함께 깊이 있는 리뷰 문화를 만들어갑니다.
         </p>
-        <button className="mt-8 px-6 py-3 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 active:scale-95 transition-all">
+        <Link
+          to="/board"
+          className="inline-block mt-8 px-6 py-3 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 active:scale-95 transition-all no-underline"
+        >
           모집 공고 둘러보기
-        </button>
+        </Link>
       </div>
 
       <div

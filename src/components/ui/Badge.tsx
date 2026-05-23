@@ -10,16 +10,21 @@ const badgeStyles: Record<string, string> = {
   'Beta Reader': 'border-stone-300 text-stone-600 bg-stone-50',
 }
 
+const displayLabels: Record<string, string> = {
+  Reviewer: '서평단',
+  'Beta Reader': '베타리더',
+}
+
 export default function Badge({ label, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border',
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border',
         badgeStyles[label] ?? 'border-gray-300 text-gray-600 bg-white',
         className,
       )}
     >
-      {label}
+      {displayLabels[label] ?? label}
     </span>
   )
 }

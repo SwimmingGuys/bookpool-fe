@@ -1,7 +1,15 @@
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { Bell, User } from 'lucide-react'
+import { cn } from '@/lib/cn'
 import Logo from './Logo'
-import SearchBar from './SearchBar'
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    'relative text-sm font-semibold no-underline transition-colors py-1',
+    isActive
+      ? 'text-orange-600'
+      : 'text-stone-500 hover:text-stone-800',
+  )
 
 export default function Header() {
   return (
@@ -9,23 +17,27 @@ export default function Header() {
       <div className="flex items-center gap-8">
         <Logo />
         <nav className="hidden md:flex items-center gap-6">
-          <Link
-            to="/board"
-            className="text-sm font-medium text-stone-500 hover:text-stone-800 no-underline transition-colors"
-          >
-            보드
-          </Link>
-          <Link
-            to="/notice"
-            className="text-sm font-medium text-stone-500 hover:text-stone-800 no-underline transition-colors"
-          >
-            공지사항
-          </Link>
+          <NavLink to="/board" className={navLinkClass}>
+            {({ isActive }) => (
+              <>
+                보드
+                {isActive && (
+                  <span className="absolute -bottom-[11px] left-0 right-0 h-0.5 bg-orange-500 rounded-full" />
+                )}
+              </>
+            )}
+          </NavLink>
+          <NavLink to="/notice" className={navLinkClass}>
+            {({ isActive }) => (
+              <>
+                공지사항
+                {isActive && (
+                  <span className="absolute -bottom-[11px] left-0 right-0 h-0.5 bg-orange-500 rounded-full" />
+                )}
+              </>
+            )}
+          </NavLink>
         </nav>
-      </div>
-
-      <div className="hidden md:block flex-1 max-w-md mx-8">
-        <SearchBar />
       </div>
 
       <div className="flex items-center gap-3">

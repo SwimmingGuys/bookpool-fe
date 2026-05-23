@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from '@/components/layout/Layout'
 import HomePage from '@/pages/HomePage'
+import BoardPage from '@/pages/BoardPage'
+import RecruitmentDetailPage from '@/pages/RecruitmentDetailPage'
 
 function App() {
   return (
@@ -8,6 +10,8 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
+          <Route path="/board" element={<BoardPage />} />
+          <Route path="/recruitments/:id" element={<RecruitmentDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -4,6 +4,11 @@ import CategorySection from '@/components/home/CategorySection'
 import FeaturedSection from '@/components/home/FeaturedSection'
 import { mockRecruitments } from '@/data/mockRecruitments'
 
+const featured = mockRecruitments
+  .filter((r) => r.status === 'open' && r.daysRemaining >= 0)
+  .sort((a, b) => a.daysRemaining - b.daysRemaining)
+  .slice(0, 8)
+
 export default function HomePage() {
   return (
     <>
@@ -13,7 +18,7 @@ export default function HomePage() {
       <FeaturedSection
         title="지금 주목해야 할 모집"
         subtitle="마감이 얼마 남지 않은 도서들을 확인해 보세요."
-        recruitments={mockRecruitments}
+        recruitments={featured}
       />
     </>
   )
