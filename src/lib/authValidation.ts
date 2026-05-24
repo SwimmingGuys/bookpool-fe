@@ -55,3 +55,14 @@ export function validateNickname(value: string): string | undefined {
   }
   return undefined
 }
+
+const CONTACT_REGEX = /^01[016789]-?\d{3,4}-?\d{4}$/
+
+export function validateContact(value: string): string | undefined {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  if (!CONTACT_REGEX.test(trimmed.replace(/\s/g, ''))) {
+    return '올바른 휴대폰 번호 형식이 아닙니다. (예: 010-1234-5678)'
+  }
+  return undefined
+}
