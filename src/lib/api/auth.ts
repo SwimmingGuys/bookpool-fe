@@ -16,6 +16,8 @@ export type AuthErrorCode =
   | 'CODE_INVALID'
   | 'CODE_EXPIRED'
   | 'EMAIL_NOT_VERIFIED'
+  | 'PASSWORD_INCORRECT'
+  | 'NOT_AUTHENTICATED'
   | 'NETWORK'
 
 export class AuthError extends Error {
@@ -88,6 +90,16 @@ export interface LoginPayload {
 
 export interface ResetPasswordPayload {
   email: string
+  newPassword: string
+}
+
+export interface UpdateProfilePayload {
+  nickname: string
+  contact?: string
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string
   newPassword: string
 }
 
@@ -178,6 +190,43 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
     )
   }
   return { user: toPublicUser(found), accessToken: makeToken(found.id) }
+}
+
+export async function updateProfile(
+  userId: string,
+  payload: UpdateProfilePayload,
+): Promise<User> {
+  await delay(MOCK_LATENCY_MS)
+  const users = loadUsers()
+  const idx = users.findIndex((u) => u.id === userId)
+  if (idx === -1) {
+    throw new AuthError('NOT_AUTHENTICATED', '로그인이 필요합니다.')
+  }
+  const trimmedContact = payload.contact?.trim() ?? ''
+  users[idx] = {
+    ...users[idx],
+    nickname: payload.nickname.trim(),
+    contact: trimmedContact === '' ? undefined : trimmedContact,
+  }
+  saveUsers(users)
+  return toPublicUser(users[idx])
+}
+
+export async function changePassword(
+  userId: string,
+  payload: ChangePasswordPayload,
+): Promise<void> {
+  await delay(MOCK_LATENCY_MS)
+  const users = loadUsers()
+  const idx = users.findIndex((u) => u.id === userId)
+  if (idx === -1) {
+    throw new AuthError('NOT_AUTHENTICATED', '로그인이 필요합니다.')
+  }
+  if (users[idx].password !== payload.currentPassword) {
+    throw new AuthError('PASSWORD_INCORRECT', '현재 비밀번호가 올바르지 않습니다.')
+  }
+  users[idx].password = payload.newPassword
+  saveUsers(users)
 }
 
 export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {

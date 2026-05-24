@@ -1,12 +1,19 @@
 import { useCallback, useRef, useState } from 'react'
-import { User, LogOut } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { User, UserCog, ClipboardList, LogOut } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useAuth } from '@/lib/auth'
 import { showToast } from '@/lib/toast'
 import { useDismissOnOutside } from '@/lib/useDismissOnOutside'
 
+const MENU_LINKS = [
+  { to: '/mypage/account', label: '내 계정 관리', icon: UserCog },
+  { to: '/mypage/recruitments', label: '공고 관리', icon: ClipboardList },
+]
+
 export default function UserMenu() {
   const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const close = useCallback(() => setOpen(false), [])
@@ -18,6 +25,7 @@ export default function UserMenu() {
     logout()
     setOpen(false)
     showToast('로그아웃되었습니다.', 'info')
+    navigate('/', { replace: true })
   }
 
   return (
@@ -49,11 +57,27 @@ export default function UserMenu() {
             </p>
             <p className="text-xs text-stone-500 truncate">{user.email}</p>
           </div>
+
+          <div className="py-1">
+            {MENU_LINKS.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors no-underline"
+              >
+                <Icon className="w-4 h-4 text-stone-500" />
+                {label}
+              </Link>
+            ))}
+          </div>
+
           <button
             type="button"
             role="menuitem"
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors border-t border-stone-100"
           >
             <LogOut className="w-4 h-4 text-stone-500" />
             로그아웃

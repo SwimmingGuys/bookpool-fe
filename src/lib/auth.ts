@@ -28,6 +28,14 @@ const authStore = createStore<AuthState>(INITIAL, {
   },
 })
 
+function requireUserId(): string {
+  const state = authStore.get()
+  if (!state.user) {
+    throw new authApi.AuthError('NOT_AUTHENTICATED', '로그인이 필요합니다.')
+  }
+  return state.user.id
+}
+
 export function useAuth() {
   const state = useSyncExternalStore(
     authStore.subscribe,
@@ -50,6 +58,14 @@ export function useAuth() {
     },
     logout: () => {
       authStore.set(INITIAL)
+    },
+    updateProfile: async (payload: authApi.UpdateProfilePayload) => {
+      const updated = await authApi.updateProfile(requireUserId(), payload)
+      authStore.set((prev) => ({ ...prev, user: updated }))
+      return updated
+    },
+    changePassword: async (payload: authApi.ChangePasswordPayload) => {
+      await authApi.changePassword(requireUserId(), payload)
     },
   }
 }
