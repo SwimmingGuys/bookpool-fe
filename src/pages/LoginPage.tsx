@@ -6,6 +6,7 @@ import { showToast } from '@/lib/toast'
 import { validateEmail, validatePassword } from '@/lib/authValidation'
 import AuthLayout from '@/components/auth/AuthLayout'
 import FormField from '@/components/auth/FormField'
+import Button from '@/components/ui/Button'
 
 type Field = 'email' | 'password'
 type Errors = Partial<Record<Field | 'submit', string>>
@@ -111,13 +112,15 @@ export default function LoginPage() {
           </p>
         )}
 
-        <button
+        <Button
           type="submit"
+          size="lg"
+          fullWidth
           disabled={submitting}
-          className="mt-2 w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          className="mt-2"
         >
           {submitting ? '로그인 중...' : '로그인'}
-        </button>
+        </Button>
       </form>
     </AuthLayout>
   )

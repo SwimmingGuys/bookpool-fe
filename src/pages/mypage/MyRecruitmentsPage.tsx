@@ -6,12 +6,14 @@ import {
   useState,
 } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Search, Star, X } from 'lucide-react'
+import { Clock, Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Recruitment } from '@/types/recruitment'
 import { getRecruitmentById } from '@/data/mockRecruitments'
 import { useFavorites, useReadRecruitments } from '@/lib/recruitmentState'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
+import EmptyState from '@/components/ui/EmptyState'
+import SearchInput from '@/components/ui/SearchInput'
 
 const PAGE_SIZE = 12
 
@@ -93,8 +95,6 @@ export default function MyRecruitmentsPage() {
   const visible = filtered.slice(0, limit)
   const hasMore = filtered.length > limit
 
-  // Reset both tabs' limits whenever filter / sort change so the user starts
-  // from the top of the filtered list.
   useEffect(() => {
     setLimits({ recent: PAGE_SIZE, favorites: PAGE_SIZE })
   }, [query, sortBy])
@@ -123,8 +123,6 @@ export default function MyRecruitmentsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-stone-800 mb-6">공고 관리</h1>
-
       <div
         role="tablist"
         aria-label="공고 관리 탭"
@@ -174,7 +172,7 @@ export default function MyRecruitmentsPage() {
       />
 
       {visible.length === 0 ? (
-        <EmptyState tab={activeTab} hasFilter={hasFilter} />
+        <EmptyForTab tab={activeTab} hasFilter={hasFilter} />
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -210,33 +208,12 @@ function Toolbar({
 }) {
   return (
     <div className="flex items-center gap-2 my-5">
-      <label
-        className={cn(
-          'flex flex-1 max-w-md items-center gap-2.5 rounded-lg px-3.5 py-2 border transition-all',
-          'bg-stone-100 border-stone-100',
-          'hover:bg-stone-50 hover:border-stone-200',
-          'focus-within:bg-white focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-100',
-        )}
-      >
-        <Search className="h-4 w-4 text-stone-400 shrink-0" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="제목, 도서, 출판사 검색"
-          className="w-full min-w-0 bg-transparent text-sm text-stone-700 placeholder-stone-400 outline-none"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => onQueryChange('')}
-            aria-label="검색어 지우기"
-            className="p-0.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-200 shrink-0 transition-colors"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </label>
+      <SearchInput
+        value={query}
+        onChange={onQueryChange}
+        placeholder="제목, 도서, 출판사 검색"
+        className="flex-1 max-w-md"
+      />
 
       <div className="relative">
         <select
@@ -262,7 +239,7 @@ function Toolbar({
   )
 }
 
-function EmptyState({
+function EmptyForTab({
   tab,
   hasFilter,
 }: {
@@ -271,27 +248,25 @@ function EmptyState({
 }) {
   if (hasFilter) {
     return (
-      <div className="rounded-xl border border-dashed border-stone-300 bg-white py-12 text-center">
-        <p className="text-sm text-stone-500">검색 조건에 맞는 공고가 없어요.</p>
-        <p className="mt-1.5 text-xs text-stone-400">
-          검색어를 다시 입력해 보세요.
-        </p>
-      </div>
+      <EmptyState
+        title="검색 조건에 맞는 공고가 없어요."
+        description="검색어를 다시 입력해 보세요."
+      />
     )
   }
-  const message =
+  const title =
     tab === 'recent' ? '아직 본 공고가 없어요.' : '아직 즐겨찾기한 공고가 없어요.'
   return (
-    <div className="rounded-xl border border-dashed border-stone-300 bg-white py-12 text-center">
-      <p className="text-sm text-stone-500">{message}</p>
-      <p className="mt-1.5 text-xs text-stone-400">
+    <EmptyState
+      title={title}
+      description={
         <Link
           to="/board"
           className="text-orange-600 hover:text-orange-700 no-underline"
         >
           보드에서 공고 둘러보기
         </Link>
-      </p>
-    </div>
+      }
+    />
   )
 }

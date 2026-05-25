@@ -1,8 +1,9 @@
 import { Link, NavLink } from 'react-router-dom'
-import { Bell, User } from 'lucide-react'
+import { User } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useAuth } from '@/lib/auth'
 import Logo from './Logo'
+import NotificationBell from './NotificationBell'
 import UserMenu from './UserMenu'
 
 const NAV_LINKS = [
@@ -40,13 +41,7 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="알림"
-          className="p-2 rounded-lg text-stone-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
-        >
-          <Bell className="h-6 w-6" />
-        </button>
+        {isLoggedIn && <NotificationBell />}
         {isLoggedIn ? (
           <UserMenu />
         ) : (

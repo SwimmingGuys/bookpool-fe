@@ -10,6 +10,8 @@ import {
   validatePasswordConfirm,
 } from '@/lib/authValidation'
 import FormField from '@/components/auth/FormField'
+import Button from '@/components/ui/Button'
+import SectionCard from '@/components/ui/SectionCard'
 
 type ProfileErrors = Partial<Record<'nickname' | 'contact' | 'submit', string>>
 type PasswordErrors = Partial<
@@ -21,35 +23,10 @@ export default function AccountSettingsPage() {
   if (!user) return null
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-stone-800 mb-8">내 계정 관리</h1>
-      <div className="flex flex-col gap-6">
-        <ProfileSection key={user.id} />
-        <PasswordSection />
-      </div>
+    <div className="flex flex-col gap-6">
+      <ProfileSection key={user.id} />
+      <PasswordSection />
     </div>
-  )
-}
-
-function SectionCard({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-6">
-      <header className="mb-5">
-        <h2 className="text-base font-bold text-stone-800">{title}</h2>
-        {description && (
-          <p className="mt-1 text-xs text-stone-500">{description}</p>
-        )}
-      </header>
-      {children}
-    </section>
   )
 }
 
@@ -138,13 +115,9 @@ function ProfileSection() {
         )}
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={submitting || !dirty}
-            className="rounded-lg bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="submit" size="lg" disabled={submitting || !dirty}>
             {submitting ? '저장 중...' : '변경사항 저장'}
-          </button>
+          </Button>
         </div>
       </form>
     </SectionCard>
@@ -261,13 +234,9 @@ function PasswordSection() {
         )}
 
         <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-lg bg-orange-500 px-5 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-          >
+          <Button type="submit" size="lg" disabled={submitting}>
             {submitting ? '변경 중...' : '비밀번호 변경'}
-          </button>
+          </Button>
         </div>
       </form>
     </SectionCard>
