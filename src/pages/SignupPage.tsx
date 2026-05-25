@@ -12,6 +12,7 @@ import {
 import AuthLayout from '@/components/auth/AuthLayout'
 import EmailVerificationFields from '@/components/auth/EmailVerificationFields'
 import FormField from '@/components/auth/FormField'
+import Button from '@/components/ui/Button'
 
 type Field = 'email' | 'password' | 'confirm' | 'nickname'
 type Errors = Partial<Record<Field | 'submit', string>>
@@ -149,13 +150,15 @@ export default function SignupPage() {
           </p>
         )}
 
-        <button
+        <Button
           type="submit"
+          size="lg"
+          fullWidth
           disabled={submitting}
-          className="mt-2 w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          className="mt-2"
         >
           {submitting ? '가입 중...' : '가입하기'}
-        </button>
+        </Button>
       </form>
     </AuthLayout>
   )

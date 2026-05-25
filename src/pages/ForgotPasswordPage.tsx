@@ -10,6 +10,7 @@ import {
 import AuthLayout from '@/components/auth/AuthLayout'
 import EmailVerificationFields from '@/components/auth/EmailVerificationFields'
 import FormField from '@/components/auth/FormField'
+import Button from '@/components/ui/Button'
 
 type Field = 'email' | 'newPassword' | 'confirm'
 type Errors = Partial<Record<Field | 'submit', string>>
@@ -129,13 +130,15 @@ export default function ForgotPasswordPage() {
           </p>
         )}
 
-        <button
+        <Button
           type="submit"
+          size="lg"
+          fullWidth
           disabled={submitting || !emailVerified}
-          className="mt-2 w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          className="mt-2"
         >
           {submitting ? '변경 중...' : '비밀번호 변경하기'}
-        </button>
+        </Button>
       </form>
     </AuthLayout>
   )

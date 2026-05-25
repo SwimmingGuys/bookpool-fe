@@ -266,3 +266,9 @@ export const mockRecruitments: Recruitment[] = generate()
 export function getRecruitmentById(id: string): Recruitment | undefined {
   return mockRecruitments.find((r) => r.id === id)
 }
+
+export function getAllPublishers(): string[] {
+  const set = new Set<string>()
+  for (const r of mockRecruitments) set.add(r.publisher)
+  return [...set].sort((a, b) => a.localeCompare(b, 'ko'))
+}

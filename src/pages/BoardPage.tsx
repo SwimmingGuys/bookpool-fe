@@ -6,6 +6,7 @@ import { mockRecruitments } from '@/data/mockRecruitments'
 import FilterPanel from '@/components/board/FilterPanel'
 import CalendarBoard from '@/components/board/CalendarBoard'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
+import EmptyState from '@/components/ui/EmptyState'
 import {
   emptyFilter,
   filterRecruitments,
@@ -171,7 +172,7 @@ export default function BoardPage() {
           </div>
 
           {sorted.length === 0 ? (
-            <EmptyState
+            <BoardEmpty
               query={filter.query}
               selectedDate={selectedDate}
               dateBasis={dateBasis}
@@ -189,7 +190,7 @@ export default function BoardPage() {
   )
 }
 
-function EmptyState({
+function BoardEmpty({
   query,
   selectedDate,
   dateBasis,
@@ -198,19 +199,17 @@ function EmptyState({
   selectedDate: string | null
   dateBasis: DateBasis
 }) {
-  let message = '조건에 맞는 공고가 없습니다.'
+  let title = '조건에 맞는 공고가 없습니다.'
   if (selectedDate) {
-    message = `${selectedDate}이(가) ${getDateBasisLabel(dateBasis)}인 공고가 없습니다.`
+    title = `${selectedDate}이(가) ${getDateBasisLabel(dateBasis)}인 공고가 없습니다.`
   } else if (query) {
-    message = `"${query}"에 대한 검색 결과가 없습니다.`
+    title = `"${query}"에 대한 검색 결과가 없습니다.`
   }
 
   return (
-    <div className="rounded-lg border border-dashed border-stone-300 bg-white py-10 text-center">
-      <p className="text-xs text-stone-500">{message}</p>
-      <p className="mt-1 text-[11px] text-stone-400">
-        필터나 검색어를 변경해 다시 시도해 보세요.
-      </p>
-    </div>
+    <EmptyState
+      title={title}
+      description="필터나 검색어를 변경해 다시 시도해 보세요."
+    />
   )
 }
