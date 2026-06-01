@@ -51,6 +51,8 @@ export default function CategorySection() {
           return (
             <button
               key={cat.label}
+              type="button"
+              aria-pressed={selected === cat.label}
               onClick={() => handleClick(cat.label)}
               className={cn(
                 'flex flex-col items-center gap-3 rounded-2xl border p-6 transition-all duration-300 cursor-pointer',
