@@ -26,6 +26,7 @@ export interface Notice {
   title: string
   content: string
   category: NoticeCategory
+  author: string
   isPinned: boolean
   createdAt: string
 }

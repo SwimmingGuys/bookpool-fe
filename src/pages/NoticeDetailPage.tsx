@@ -30,8 +30,8 @@ export default function NoticeDetailPage() {
               중요
             </span>
           )}
-          <span className="ml-auto text-xs text-stone-400 tabular-nums">
-            {notice.createdAt}
+          <span className="ml-auto text-xs text-stone-400">
+            {notice.author} · {notice.createdAt}
           </span>
         </div>
         <h1 className="text-2xl font-bold text-stone-800 leading-snug">

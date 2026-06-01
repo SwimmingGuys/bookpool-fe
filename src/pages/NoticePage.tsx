@@ -44,6 +44,8 @@ export default function NoticePage() {
     totalPages,
   )
   const visibleNormal = normal.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  // 페이지마다 목록 높이를 동일하게 유지해 페이지네이션 위치를 고정한다
+  const emptySlots = totalPages > 1 ? PAGE_SIZE - visibleNormal.length : 0
 
   const setCategory = (next: CategoryFilter) => {
     const params = new URLSearchParams(searchParams)
@@ -98,9 +100,14 @@ export default function NoticePage() {
             {visibleNormal.map((notice) => (
               <NoticeRow key={notice.id} notice={notice} />
             ))}
+            {Array.from({ length: emptySlots }).map((_, i) => (
+              <NoticeRowSkeleton key={`skeleton-${i}`} />
+            ))}
           </div>
 
-          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          {totalPages > 1 && (
+            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+          )}
         </>
       )}
     </div>
@@ -125,10 +132,25 @@ function NoticeRow({ notice }: { notice: Notice }) {
       <p className="flex-1 min-w-0 truncate text-sm font-medium text-stone-700 group-hover:text-orange-600 transition-colors">
         {notice.title}
       </p>
-      <span className="shrink-0 text-[11px] text-stone-400 tabular-nums">
-        {formatMonthDay(notice.createdAt)}
+      <span className="shrink-0 text-[11px] text-stone-400">
+        {notice.author} · {formatMonthDay(notice.createdAt)}
       </span>
     </Link>
+  )
+}
+
+// 빈 슬롯 — NoticeRow와 동일한 높이를 차지해 목록 영역 높이를 일정하게 유지
+function NoticeRowSkeleton() {
+  return (
+    <div
+      aria-hidden
+      className="flex items-center gap-3 rounded-xl border border-transparent p-4"
+    >
+      <span className="inline-flex items-center rounded-full border border-transparent px-2.5 py-0.5 text-[11px] font-medium">
+        &nbsp;
+      </span>
+      <span className="flex-1 text-sm">&nbsp;</span>
+    </div>
   )
 }
 
@@ -145,31 +167,29 @@ function Pagination({
   return (
     <nav
       aria-label="페이지 이동"
-      className="mt-6 flex items-center justify-between gap-2"
+      className="mt-6 flex items-center justify-center gap-1"
     >
       <PageButton
         label="이전"
         disabled={page <= 1}
         onClick={() => onChange(page - 1)}
       />
-      <div className="flex items-center gap-1">
-        {pages.map((p) => (
-          <button
-            key={p}
-            type="button"
-            aria-current={p === page ? 'page' : undefined}
-            onClick={() => onChange(p)}
-            className={cn(
-              'min-w-9 h-9 px-2 rounded-lg text-sm font-medium tabular-nums transition-colors',
-              p === page
-                ? 'bg-stone-800 text-white'
-                : 'text-stone-600 hover:bg-stone-100',
-            )}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
+      {pages.map((p) => (
+        <button
+          key={p}
+          type="button"
+          aria-current={p === page ? 'page' : undefined}
+          onClick={() => onChange(p)}
+          className={cn(
+            'min-w-9 h-9 px-2 rounded-lg text-sm font-medium tabular-nums transition-colors',
+            p === page
+              ? 'bg-stone-800 text-white'
+              : 'text-stone-600 hover:bg-stone-100',
+          )}
+        >
+          {p}
+        </button>
+      ))}
       <PageButton
         label="다음"
         disabled={page >= totalPages}

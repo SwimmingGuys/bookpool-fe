@@ -15,6 +15,14 @@ interface NoticeSeed {
   isPinned?: boolean
 }
 
+const CATEGORY_AUTHORS: Record<NoticeCategory, string> = {
+  update: '기술팀',
+  policy: '운영팀',
+  maintenance: '기술팀',
+  event: '마케팅팀',
+  general: '운영팀',
+}
+
 const SEEDS: NoticeSeed[] = [
   {
     title: '개인정보 처리방침 개정 안내',
@@ -131,6 +139,7 @@ export const mockNotices: Notice[] = SEEDS.map((seed, i) => ({
   title: seed.title,
   content: seed.content,
   category: seed.category,
+  author: CATEGORY_AUTHORS[seed.category],
   isPinned: seed.isPinned ?? false,
   createdAt: daysAgo(seed.daysAgo),
 }))
