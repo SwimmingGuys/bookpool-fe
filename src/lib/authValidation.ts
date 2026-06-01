@@ -7,6 +7,13 @@ export const NICKNAME_MIN_LENGTH = 2
 export const NICKNAME_MAX_LENGTH = 12
 export const VERIFICATION_CODE_LENGTH = 6
 const NICKNAME_FORBIDDEN = /[<>"'`;]/
+const NICKNAME_BANNED_WORDS = [
+  '관리자',
+  '운영자',
+  '운영진',
+  'admin',
+  'administrator',
+]
 const VERIFICATION_CODE_REGEX = /^\d{6}$/
 
 export function validateEmail(value: string): string | undefined {
@@ -24,6 +31,11 @@ export function validatePassword(value: string): string | undefined {
   if (!PASSWORD_HAS_LETTER.test(value) || !PASSWORD_HAS_DIGIT.test(value)) {
     return '비밀번호는 영문과 숫자를 모두 포함해야 합니다.'
   }
+  return undefined
+}
+
+export function validateRequiredPassword(value: string): string | undefined {
+  if (!value) return '비밀번호를 입력해주세요.'
   return undefined
 }
 
@@ -52,6 +64,10 @@ export function validateNickname(value: string): string | undefined {
   }
   if (NICKNAME_FORBIDDEN.test(trimmed)) {
     return '허용되지 않는 특수문자가 포함되어 있습니다.'
+  }
+  const lowered = trimmed.toLowerCase()
+  if (NICKNAME_BANNED_WORDS.some((word) => lowered.includes(word))) {
+    return '사용할 수 없는 단어가 포함되어 있습니다.'
   }
   return undefined
 }

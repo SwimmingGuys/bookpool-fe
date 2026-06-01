@@ -15,7 +15,7 @@ import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
 
 type Field = 'email' | 'password' | 'confirm' | 'nickname'
-type Errors = Partial<Record<Field | 'submit', string>>
+type Errors = Partial<Record<Field, string>>
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return '/'
@@ -65,10 +65,12 @@ export default function SignupPage() {
       if (err instanceof AuthError && err.code === 'EMAIL_EXISTS') {
         setErrors({ email: err.message })
         setEmailVerified(false)
-      } else if (err instanceof AuthError) {
-        setErrors({ submit: err.message })
       } else {
-        setErrors({ submit: '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.' })
+        const message =
+          err instanceof AuthError
+            ? err.message
+            : '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.'
+        showToast(message, 'error')
       }
     } finally {
       setSubmitting(false)
@@ -143,12 +145,6 @@ export default function SignupPage() {
           error={errors.nickname}
           disabled={submitting}
         />
-
-        {errors.submit && (
-          <p role="alert" className="text-sm text-red-500 -mt-1">
-            {errors.submit}
-          </p>
-        )}
 
         <Button
           type="submit"

@@ -3,13 +3,13 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { AuthError } from '@/lib/api/auth'
 import { showToast } from '@/lib/toast'
-import { validateEmail, validatePassword } from '@/lib/authValidation'
+import { validateEmail, validateRequiredPassword } from '@/lib/authValidation'
 import AuthLayout from '@/components/auth/AuthLayout'
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
 
 type Field = 'email' | 'password'
-type Errors = Partial<Record<Field | 'submit', string>>
+type Errors = Partial<Record<Field, string>>
 
 function sanitizeRedirect(raw: string | null): string {
   if (!raw) return '/'
@@ -30,7 +30,7 @@ export default function LoginPage() {
 
   const validateAll = (): Errors => ({
     email: validateEmail(email),
-    password: validatePassword(password),
+    password: validateRequiredPassword(password),
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,11 +47,11 @@ export default function LoginPage() {
       showToast('로그인되었습니다.', 'success')
       navigate(redirect, { replace: true })
     } catch (err) {
-      if (err instanceof AuthError) {
-        setErrors({ submit: err.message })
-      } else {
-        setErrors({ submit: '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.' })
-      }
+      const message =
+        err instanceof AuthError
+          ? err.message
+          : '로그인에 실패했습니다. 잠시 후 다시 시도해주세요.'
+      showToast(message, 'error')
     } finally {
       setSubmitting(false)
     }
@@ -92,7 +92,7 @@ export default function LoginPage() {
           placeholder="비밀번호 입력"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onBlur={() => setErrors((p) => ({ ...p, password: validatePassword(password) }))}
+          onBlur={() => setErrors((p) => ({ ...p, password: validateRequiredPassword(password) }))}
           error={errors.password}
           disabled={submitting}
         />
@@ -105,12 +105,6 @@ export default function LoginPage() {
             비밀번호를 잊어버리셨나요?
           </Link>
         </div>
-
-        {errors.submit && (
-          <p role="alert" className="text-sm text-red-500 -mt-1">
-            {errors.submit}
-          </p>
-        )}
 
         <Button
           type="submit"
