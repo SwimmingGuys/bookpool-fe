@@ -8,6 +8,7 @@ import { formatFullDate } from '@/lib/date'
 import Chip from '@/components/ui/Chip'
 import EmptyState from '@/components/ui/EmptyState'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
+import { useNoticeReadState } from '@/lib/noticeReadState'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const PAGE_SIZE = 10
@@ -112,14 +113,20 @@ export default function NoticePage() {
 }
 
 function NoticeRow({ notice }: { notice: Notice }) {
+  const { isRead, markAsRead } = useNoticeReadState()
+  const read = isRead(notice.id)
+
   return (
     <Link
       to={`/notice/${notice.id}`}
+      onClick={() => markAsRead(notice.id)}
       className={cn(
         'group flex items-center gap-3 rounded-xl border p-4 transition-all no-underline',
-        notice.isPinned
-          ? 'border-stone-300 bg-white hover:bg-stone-50'
-          : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50',
+        read
+          ? 'border-stone-200/70 bg-stone-50 hover:bg-stone-50/70 hover:border-stone-300'
+          : notice.isPinned
+            ? 'border-stone-300 bg-white hover:bg-stone-50'
+            : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50',
       )}
     >
       {/* 핀 슬롯 — 고정 너비로 비워둬 뱃지·제목 시작 위치를 항상 동일하게 유지 */}
@@ -130,7 +137,12 @@ function NoticeRow({ notice }: { notice: Notice }) {
       <span className="flex w-20 shrink-0">
         <NoticeCategoryBadge category={notice.category} />
       </span>
-      <p className="flex-1 min-w-0 truncate text-sm font-medium text-stone-700 group-hover:text-orange-600 transition-colors">
+      <p
+        className={cn(
+          'flex-1 min-w-0 truncate text-sm transition-colors group-hover:text-orange-600',
+          read ? 'font-normal text-stone-400' : 'font-medium text-stone-700',
+        )}
+      >
         {notice.title}
       </p>
       <span className="shrink-0 text-xs text-stone-400">
