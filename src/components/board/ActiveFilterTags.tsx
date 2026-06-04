@@ -1,10 +1,15 @@
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import type { RecruitmentType } from '@/types/recruitment'
+import type { RecruitmentFilter } from '@/lib/recruitmentFilter'
 import {
-  RECRUITMENT_TYPE_OPTIONS,
-  type RecruitmentType,
-} from '@/types/recruitment'
-import type { DeadlineFilter, RecruitmentFilter } from '@/lib/recruitmentFilter'
+  DEADLINE_LABELS,
+  TYPE_LABELS,
+  TYPE_FILTER_COLOR,
+  CATEGORY_FILTER_COLOR,
+  DEADLINE_FILTER_COLOR,
+  type DeadlineValue,
+} from './filterMeta'
 
 interface ActiveFilterTagsProps {
   filter: RecruitmentFilter
@@ -12,17 +17,6 @@ interface ActiveFilterTagsProps {
   onClearQuery?: () => void
   className?: string
 }
-
-type DeadlineValue = Exclude<DeadlineFilter, 'all'>
-
-const DEADLINE_LABELS: Record<DeadlineValue, string> = {
-  week: '일주일 이내',
-  imminent: '마감 임박 (D-3)',
-}
-
-const TYPE_LABELS: Record<RecruitmentType, string> = Object.fromEntries(
-  RECRUITMENT_TYPE_OPTIONS.map((o) => [o.value, o.label]),
-) as Record<RecruitmentType, string>
 
 const tagStyles = {
   orange: 'bg-orange-50/80 border-orange-200/70 text-orange-700',
@@ -66,21 +60,25 @@ export default function ActiveFilterTags({
         </SelectedTag>
       )}
       {filter.types.map((type) => (
-        <SelectedTag key={`t-${type}`} color="blue" onRemove={() => removeType(type)}>
+        <SelectedTag
+          key={`t-${type}`}
+          color={TYPE_FILTER_COLOR}
+          onRemove={() => removeType(type)}
+        >
           {TYPE_LABELS[type]}
         </SelectedTag>
       ))}
       {filter.categories.map((cat) => (
         <SelectedTag
           key={`c-${cat}`}
-          color="orange"
+          color={CATEGORY_FILTER_COLOR}
           onRemove={() => removeCategory(cat)}
         >
           {cat}
         </SelectedTag>
       ))}
       {deadlineActive && (
-        <SelectedTag color="rose" onRemove={clearDeadline}>
+        <SelectedTag color={DEADLINE_FILTER_COLOR} onRemove={clearDeadline}>
           {DEADLINE_LABELS[filter.deadline as DeadlineValue]}
         </SelectedTag>
       )}

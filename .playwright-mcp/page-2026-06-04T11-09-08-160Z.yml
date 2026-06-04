@@ -1,0 +1,400 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "BookPool Review Platform" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: BookPool
+          - generic [ref=e9]: Review Platform
+        - navigation [ref=e10]:
+          - link "보드" [ref=e11] [cursor=pointer]:
+            - /url: /board
+            - text: 보드
+          - link "공지사항" [ref=e13] [cursor=pointer]:
+            - /url: /notice
+      - link "로그인" [ref=e15] [cursor=pointer]:
+        - /url: /login
+        - img [ref=e16]
+  - main [ref=e19]:
+    - generic [ref=e21]:
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - button "2026.05" [ref=e27]:
+              - generic [ref=e28]: "2026.05"
+              - img [ref=e29]
+            - generic [ref=e31]:
+              - button "이전 달" [ref=e32]:
+                - img [ref=e33]
+              - button "다음 달" [ref=e35]:
+                - img [ref=e36]
+              - button "오늘" [ref=e38]
+          - tablist "달력 표시 기준" [ref=e39]:
+            - tab "모집 시작일" [ref=e40]
+            - tab "모집 마감일" [selected] [ref=e41]
+        - generic [ref=e43]:
+          - generic [ref=e45]:
+            - img [ref=e46]
+            - textbox "공고 검색" [active] [ref=e49]:
+              - /placeholder: 제목, 도서, 출판사 검색
+              - text: 한빛미디어
+            - button "검색어 지우기" [ref=e3429]:
+              - img [ref=e3430]
+          - generic [ref=e55]:
+            - button "공고 유형" [ref=e57]:
+              - generic [ref=e58]: 공고 유형
+              - img [ref=e59]
+            - button "카테고리" [ref=e62]:
+              - generic [ref=e63]: 카테고리
+              - img [ref=e64]
+            - button "마감 조건" [ref=e67]:
+              - generic [ref=e68]: 마감 조건
+              - img [ref=e69]
+        - generic [ref=e71]:
+          - generic [ref=e72]: 일
+          - generic [ref=e73]: 월
+          - generic [ref=e74]: 화
+          - generic [ref=e75]: 수
+          - generic [ref=e76]: 목
+          - generic [ref=e77]: 금
+          - generic [ref=e78]: 토
+        - generic [ref=e79]:
+          - button "1 2 메타인지 학습 전략 검은 새의 비행" [ref=e3433]:
+            - generic [ref=e86]:
+              - generic [ref=e87]: "1"
+              - generic [ref=e88]: "2"
+            - generic [ref=e89]:
+              - generic "메타인지 학습 전략" [ref=e472]
+              - generic "검은 새의 비행" [ref=e3434]
+          - button "2" [ref=e3435]:
+            - generic [ref=e93]: "2"
+          - button "3" [ref=e3436]:
+            - generic [ref=e97]: "3"
+          - button "4" [ref=e3437]:
+            - generic [ref=e101]: "4"
+          - button "5 2 쿠버네티스 마스터링 뇌과학으로 본 학습" [ref=e3438]:
+            - generic [ref=e106]:
+              - generic [ref=e107]: "5"
+              - generic [ref=e108]: "2"
+            - generic [ref=e109]:
+              - generic "쿠버네티스 마스터링" [ref=e3439]
+              - generic "뇌과학으로 본 학습" [ref=e3440]
+          - button "6" [ref=e3441]:
+            - generic [ref=e114]: "6"
+          - button "7 1 타이포그래피 입문" [ref=e3442]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: "7"
+              - generic [ref=e119]: "1"
+            - generic "타이포그래피 입문" [ref=e504]
+          - button "8" [ref=e3443]:
+            - generic [ref=e124]: "8"
+          - button "9" [ref=e3444]:
+            - generic [ref=e128]: "9"
+          - button "10" [ref=e3445]:
+            - generic [ref=e134]: "10"
+          - button "11 2 데이터 기반 의사결정 뇌과학으로 본 학습" [ref=e3446]:
+            - generic [ref=e137]:
+              - generic [ref=e138]: "11"
+              - generic [ref=e525]: "2"
+            - generic [ref=e139]:
+              - generic "데이터 기반 의사결정" [ref=e526]
+              - generic "뇌과학으로 본 학습" [ref=e3447]
+          - button "12 2 외국어 학습의 비밀 1만 시간의 법칙" [ref=e3448]:
+            - generic [ref=e141]:
+              - generic [ref=e142]: "12"
+              - generic [ref=e531]: "2"
+            - generic [ref=e143]:
+              - generic "외국어 학습의 비밀" [ref=e3449]
+              - generic "1만 시간의 법칙" [ref=e3450]
+          - button "13 2 비밀의 정원 잃어버린 도서관" [ref=e3451]:
+            - generic [ref=e145]:
+              - generic [ref=e146]: "13"
+              - generic [ref=e147]: "2"
+            - generic [ref=e148]:
+              - generic "비밀의 정원" [ref=e3452]
+              - generic "잃어버린 도서관" [ref=e3453]
+          - button "14" [ref=e3454]:
+            - generic [ref=e154]: "14"
+          - button "15 1 데이터 기반 의사결정" [ref=e3455]:
+            - generic [ref=e159]:
+              - generic [ref=e160]: "15"
+              - generic [ref=e547]: "1"
+            - generic "데이터 기반 의사결정" [ref=e3456]
+          - button "16" [ref=e3457]:
+            - generic [ref=e164]: "16"
+          - button "17 1 실무자를 위한 Spring Security" [ref=e3458]:
+            - generic [ref=e169]:
+              - generic [ref=e170]: "17"
+              - generic [ref=e558]: "1"
+            - generic "실무자를 위한 Spring Security" [ref=e561]
+          - button "18 1 아토믹 해빗" [ref=e3459]:
+            - generic [ref=e173]:
+              - generic [ref=e174]: "18"
+              - generic [ref=e564]: "1"
+            - generic "아토믹 해빗" [ref=e3460]
+          - button "19" [ref=e3461]:
+            - generic [ref=e178]: "19"
+          - button "20" [ref=e3462]:
+            - generic [ref=e184]: "20"
+          - button "21" [ref=e3463]:
+            - generic [ref=e188]: "21"
+          - button "22" [ref=e3464]:
+            - generic [ref=e194]: "22"
+          - button "23" [ref=e3465]:
+            - generic [ref=e198]: "23"
+          - button "24 1 정의란 무엇인가" [ref=e3466]:
+            - generic [ref=e201]:
+              - generic [ref=e202]: "24"
+              - generic [ref=e597]: "1"
+            - generic "정의란 무엇인가" [ref=e600]
+          - button "25" [ref=e3467]:
+            - generic [ref=e206]: "25"
+          - button "26" [ref=e3468]:
+            - generic [ref=e210]: "26"
+          - button "27" [ref=e3469]:
+            - generic [ref=e214]: "27"
+          - button "28" [ref=e3470]:
+            - generic [ref=e220]: "28"
+          - button "29" [ref=e3471]:
+            - generic [ref=e224]: "29"
+          - button "30" [ref=e3472]:
+            - generic [ref=e228]: "30"
+          - button "31" [ref=e3473]:
+            - generic [ref=e232]: "31"
+      - generic [ref=e240]:
+        - generic [ref=e241]:
+          - heading "전체 공고15" [level=2] [ref=e3474]
+          - button "마감 임박순" [ref=e246]:
+            - img [ref=e247]
+            - generic [ref=e250]: 마감 임박순
+            - img [ref=e251]
+        - generic [ref=e3476]:
+          - text: "검색: 한빛미디어"
+          - button "필터 제거" [ref=e3477]:
+            - img [ref=e3478]
+        - generic [ref=e259]:
+          - link "서평단 마감 즐겨찾기 추가 메타인지 학습 전략 한빛미디어 · 학습/교육 05.01 (금) 마감 조회 2.0k" [ref=e639] [cursor=pointer]:
+            - /url: /recruitments/1
+            - generic [ref=e640]:
+              - generic [ref=e641]:
+                - generic [ref=e642]: 서평단
+                - generic [ref=e643]: 마감
+              - button "즐겨찾기 추가" [ref=e644]:
+                - img [ref=e645]
+            - heading "메타인지 학습 전략" [level=3] [ref=e647]
+            - paragraph [ref=e648]: 한빛미디어 · 학습/교육
+            - generic [ref=e649]:
+              - generic [ref=e650]:
+                - generic [ref=e651]: "05.01"
+                - generic [ref=e652]: (금) 마감
+              - generic [ref=e653]: 조회 2.0k
+          - link "서평단 마감 즐겨찾기 추가 검은 새의 비행 한빛미디어 · 소설 05.01 (금) 마감 조회 427" [ref=e260] [cursor=pointer]:
+            - /url: /recruitments/5
+            - generic [ref=e261]:
+              - generic [ref=e262]:
+                - generic [ref=e263]: 서평단
+                - generic [ref=e264]: 마감
+              - button "즐겨찾기 추가" [ref=e265]:
+                - img [ref=e266]
+            - heading "검은 새의 비행" [level=3] [ref=e268]
+            - paragraph [ref=e269]: 한빛미디어 · 소설
+            - generic [ref=e270]:
+              - generic [ref=e271]:
+                - generic [ref=e272]: "05.01"
+                - generic [ref=e273]: (금) 마감
+              - generic [ref=e274]: 조회 427
+          - link "서평단 마감 즐겨찾기 추가 쿠버네티스 마스터링 한빛미디어 · IT/개발 05.05 (화) 마감 조회 146" [ref=e1044] [cursor=pointer]:
+            - /url: /recruitments/32
+            - generic [ref=e1045]:
+              - generic [ref=e1046]:
+                - generic [ref=e1047]: 서평단
+                - generic [ref=e1048]: 마감
+              - button "즐겨찾기 추가" [ref=e1049]:
+                - img [ref=e1050]
+            - heading "쿠버네티스 마스터링" [level=3] [ref=e1052]
+            - paragraph [ref=e1053]: 한빛미디어 · IT/개발
+            - generic [ref=e1054]:
+              - generic [ref=e1055]:
+                - generic [ref=e1056]: "05.05"
+                - generic [ref=e1057]: (화) 마감
+              - generic [ref=e1058]: 조회 146
+          - link "베타리더 마감 즐겨찾기 추가 뇌과학으로 본 학습 한빛미디어 · 학습/교육 05.05 (화) 마감 조회 963" [ref=e1104] [cursor=pointer]:
+            - /url: /recruitments/36
+            - generic [ref=e1105]:
+              - generic [ref=e1106]:
+                - generic [ref=e1107]: 베타리더
+                - generic [ref=e1108]: 마감
+              - button "즐겨찾기 추가" [ref=e1109]:
+                - img [ref=e1110]
+            - heading "뇌과학으로 본 학습" [level=3] [ref=e1112]
+            - paragraph [ref=e1113]: 한빛미디어 · 학습/교육
+            - generic [ref=e1114]:
+              - generic [ref=e1115]:
+                - generic [ref=e1116]: "05.05"
+                - generic [ref=e1117]: (화) 마감
+              - generic [ref=e1118]: 조회 963
+          - link "베타리더 마감 즐겨찾기 추가 타이포그래피 입문 한빛미디어 · 예술/디자인 05.07 (목) 마감 조회 95" [ref=e1224] [cursor=pointer]:
+            - /url: /recruitments/44
+            - generic [ref=e1225]:
+              - generic [ref=e1226]:
+                - generic [ref=e1227]: 베타리더
+                - generic [ref=e1228]: 마감
+              - button "즐겨찾기 추가" [ref=e1229]:
+                - img [ref=e1230]
+            - heading "타이포그래피 입문" [level=3] [ref=e1232]
+            - paragraph [ref=e1233]: 한빛미디어 · 예술/디자인
+            - generic [ref=e1234]:
+              - generic [ref=e1235]:
+                - generic [ref=e1236]: "05.07"
+                - generic [ref=e1237]: (목) 마감
+              - generic [ref=e1238]: 조회 95
+          - link "서평단 마감 즐겨찾기 추가 데이터 기반 의사결정 한빛미디어 · 기획/디자인 05.11 (월) 마감 조회 949" [ref=e1464] [cursor=pointer]:
+            - /url: /recruitments/62
+            - generic [ref=e1465]:
+              - generic [ref=e1466]:
+                - generic [ref=e1467]: 서평단
+                - generic [ref=e1468]: 마감
+              - button "즐겨찾기 추가" [ref=e1469]:
+                - img [ref=e1470]
+            - heading "데이터 기반 의사결정" [level=3] [ref=e1472]
+            - paragraph [ref=e1473]: 한빛미디어 · 기획/디자인
+            - generic [ref=e1474]:
+              - generic [ref=e1475]:
+                - generic [ref=e1476]: "05.11"
+                - generic [ref=e1477]: (월) 마감
+              - generic [ref=e1478]: 조회 949
+          - link "서평단 마감 즐겨찾기 추가 뇌과학으로 본 학습 한빛미디어 · 학습/교육 05.11 (월) 마감 조회 2.9k" [ref=e1509] [cursor=pointer]:
+            - /url: /recruitments/65
+            - generic [ref=e1510]:
+              - generic [ref=e1511]:
+                - generic [ref=e1512]: 서평단
+                - generic [ref=e1513]: 마감
+              - button "즐겨찾기 추가" [ref=e1514]:
+                - img [ref=e1515]
+            - heading "뇌과학으로 본 학습" [level=3] [ref=e1517]
+            - paragraph [ref=e1518]: 한빛미디어 · 학습/교육
+            - generic [ref=e1519]:
+              - generic [ref=e1520]:
+                - generic [ref=e1521]: "05.11"
+                - generic [ref=e1522]: (월) 마감
+              - generic [ref=e1523]: 조회 2.9k
+          - link "서평단 마감 즐겨찾기 추가 외국어 학습의 비밀 한빛미디어 · 학습/교육 05.12 (화) 마감 조회 2.6k" [ref=e1584] [cursor=pointer]:
+            - /url: /recruitments/70
+            - generic [ref=e1585]:
+              - generic [ref=e1586]:
+                - generic [ref=e1587]: 서평단
+                - generic [ref=e1588]: 마감
+              - button "즐겨찾기 추가" [ref=e1589]:
+                - img [ref=e1590]
+            - heading "외국어 학습의 비밀" [level=3] [ref=e1592]
+            - paragraph [ref=e1593]: 한빛미디어 · 학습/교육
+            - generic [ref=e1594]:
+              - generic [ref=e1595]:
+                - generic [ref=e1596]: "05.12"
+                - generic [ref=e1597]: (화) 마감
+              - generic [ref=e1598]: 조회 2.6k
+          - link "베타리더 마감 즐겨찾기 추가 1만 시간의 법칙 한빛미디어 · 자기계발 05.12 (화) 마감 조회 1.5k" [ref=e1644] [cursor=pointer]:
+            - /url: /recruitments/74
+            - generic [ref=e1645]:
+              - generic [ref=e1646]:
+                - generic [ref=e1647]: 베타리더
+                - generic [ref=e1648]: 마감
+              - button "즐겨찾기 추가" [ref=e1649]:
+                - img [ref=e1650]
+            - heading "1만 시간의 법칙" [level=3] [ref=e1652]
+            - paragraph [ref=e1653]: 한빛미디어 · 자기계발
+            - generic [ref=e1654]:
+              - generic [ref=e1655]:
+                - generic [ref=e1656]: "05.12"
+                - generic [ref=e1657]: (화) 마감
+              - generic [ref=e1658]: 조회 1.5k
+          - link "서평단 마감 즐겨찾기 추가 비밀의 정원 한빛미디어 · 소설 05.13 (수) 마감 조회 2.3k" [ref=e350] [cursor=pointer]:
+            - /url: /recruitments/81
+            - generic [ref=e351]:
+              - generic [ref=e352]:
+                - generic [ref=e353]: 서평단
+                - generic [ref=e354]: 마감
+              - button "즐겨찾기 추가" [ref=e355]:
+                - img [ref=e356]
+            - heading "비밀의 정원" [level=3] [ref=e358]
+            - paragraph [ref=e359]: 한빛미디어 · 소설
+            - generic [ref=e360]:
+              - generic [ref=e361]:
+                - generic [ref=e362]: "05.13"
+                - generic [ref=e363]: (수) 마감
+              - generic [ref=e364]: 조회 2.3k
+          - link "베타리더 마감 즐겨찾기 추가 잃어버린 도서관 한빛미디어 · 소설 05.13 (수) 마감 조회 816" [ref=e365] [cursor=pointer]:
+            - /url: /recruitments/83
+            - generic [ref=e366]:
+              - generic [ref=e367]:
+                - generic [ref=e368]: 베타리더
+                - generic [ref=e369]: 마감
+              - button "즐겨찾기 추가" [ref=e370]:
+                - img [ref=e371]
+            - heading "잃어버린 도서관" [level=3] [ref=e373]
+            - paragraph [ref=e374]: 한빛미디어 · 소설
+            - generic [ref=e375]:
+              - generic [ref=e376]:
+                - generic [ref=e377]: "05.13"
+                - generic [ref=e378]: (수) 마감
+              - generic [ref=e379]: 조회 816
+          - link "서평단 마감 즐겨찾기 추가 데이터 기반 의사결정 한빛미디어 · 기획/디자인 05.15 (금) 마감 조회 965" [ref=e1959] [cursor=pointer]:
+            - /url: /recruitments/99
+            - generic [ref=e1960]:
+              - generic [ref=e1961]:
+                - generic [ref=e1962]: 서평단
+                - generic [ref=e1963]: 마감
+              - button "즐겨찾기 추가" [ref=e1964]:
+                - img [ref=e1965]
+            - heading "데이터 기반 의사결정" [level=3] [ref=e1967]
+            - paragraph [ref=e1968]: 한빛미디어 · 기획/디자인
+            - generic [ref=e1969]:
+              - generic [ref=e1970]:
+                - generic [ref=e1971]: "05.15"
+                - generic [ref=e1972]: (금) 마감
+              - generic [ref=e1973]: 조회 965
+          - link "베타리더 마감 즐겨찾기 추가 실무자를 위한 Spring Security 한빛미디어 · IT/개발 05.17 (일) 마감 조회 1.5k" [ref=e2154] [cursor=pointer]:
+            - /url: /recruitments/113
+            - generic [ref=e2155]:
+              - generic [ref=e2156]:
+                - generic [ref=e2157]: 베타리더
+                - generic [ref=e2158]: 마감
+              - button "즐겨찾기 추가" [ref=e2159]:
+                - img [ref=e2160]
+            - heading "실무자를 위한 Spring Security" [level=3] [ref=e2162]
+            - paragraph [ref=e2163]: 한빛미디어 · IT/개발
+            - generic [ref=e2164]:
+              - generic [ref=e2165]:
+                - generic [ref=e2166]: "05.17"
+                - generic [ref=e2167]: (일) 마감
+              - generic [ref=e2168]: 조회 1.5k
+          - link "베타리더 마감 즐겨찾기 추가 아토믹 해빗 한빛미디어 · 자기계발 05.18 (월) 마감 조회 1.3k" [ref=e2274] [cursor=pointer]:
+            - /url: /recruitments/121
+            - generic [ref=e2275]:
+              - generic [ref=e2276]:
+                - generic [ref=e2277]: 베타리더
+                - generic [ref=e2278]: 마감
+              - button "즐겨찾기 추가" [ref=e2279]:
+                - img [ref=e2280]
+            - heading "아토믹 해빗" [level=3] [ref=e2282]
+            - paragraph [ref=e2283]: 한빛미디어 · 자기계발
+            - generic [ref=e2284]:
+              - generic [ref=e2285]:
+                - generic [ref=e2286]: "05.18"
+                - generic [ref=e2287]: (월) 마감
+              - generic [ref=e2288]: 조회 1.3k
+          - link "서평단 D-1 즐겨찾기 추가 정의란 무엇인가 한빛미디어 · 인문/사회 05.24 (일) 마감 조회 297" [ref=e2874] [cursor=pointer]:
+            - /url: /recruitments/163
+            - generic [ref=e2875]:
+              - generic [ref=e2876]:
+                - generic [ref=e2877]: 서평단
+                - generic [ref=e2878]: D-1
+              - button "즐겨찾기 추가" [ref=e2879]:
+                - img [ref=e2880]
+            - heading "정의란 무엇인가" [level=3] [ref=e2882]
+            - paragraph [ref=e2883]: 한빛미디어 · 인문/사회
+            - generic [ref=e2884]:
+              - generic [ref=e2885]:
+                - generic [ref=e2886]: "05.24"
+                - generic [ref=e2887]: (일) 마감
+              - generic [ref=e2888]: 조회 297
