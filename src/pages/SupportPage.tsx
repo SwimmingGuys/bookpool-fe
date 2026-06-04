@@ -15,6 +15,7 @@ import Chip from '@/components/ui/Chip'
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const TABS = [
   { value: 'write', label: '문의하기' },
@@ -45,6 +46,7 @@ function validateContent(value: string): string | undefined {
 }
 
 export default function SupportPage() {
+  useDocumentTitle('문의 / 요청')
   const { inquiries, submitInquiry } = useInquiries()
   const [tab, setTab] = useState<TabValue>('write')
 
@@ -87,11 +89,6 @@ export default function SupportPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
-      <h1 className="flex items-center gap-2 text-2xl font-bold text-stone-800 tracking-tight mb-8">
-        <Headphones className="w-6 h-6 text-stone-400" strokeWidth={2} />
-        문의 / 요청
-      </h1>
-
       <div
         role="tablist"
         aria-label="문의 탭"
@@ -212,18 +209,18 @@ function InquiryCard({ inquiry }: { inquiry: Inquiry }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-white p-4">
       <div className="flex items-center gap-2 mb-2">
-        <span className="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] font-medium text-stone-600">
+        <span className="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 px-2.5 py-0.5 text-xs font-medium text-stone-600">
           {INQUIRY_TYPE_LABELS[inquiry.type]}
         </span>
         <span
           className={cn(
-            'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium',
+            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
             answered ? 'bg-orange-50 text-orange-600' : 'bg-stone-100 text-stone-500',
           )}
         >
           {INQUIRY_STATUS_LABELS[inquiry.status]}
         </span>
-        <span className="ml-auto text-[11px] text-stone-400 tabular-nums">
+        <span className="ml-auto text-xs text-stone-400 tabular-nums">
           {formatMonthDay(inquiry.createdAt)}
         </span>
       </div>

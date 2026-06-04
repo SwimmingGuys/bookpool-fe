@@ -1,11 +1,15 @@
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Pin } from 'lucide-react'
 import { getNoticeById } from '@/data/mockNotices'
+import { formatFullDate } from '@/lib/date'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export default function NoticeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const notice = id ? getNoticeById(id) : undefined
+
+  useDocumentTitle(notice ? notice.title : '공지사항')
 
   if (!notice) {
     return <NotFound />
@@ -31,7 +35,7 @@ export default function NoticeDetailPage() {
             </span>
           )}
           <span className="ml-auto text-xs text-stone-400">
-            {notice.author} · {notice.createdAt}
+            {formatFullDate(notice.createdAt)}
           </span>
         </div>
         <h1 className="text-2xl font-bold text-stone-800 leading-snug">

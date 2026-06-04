@@ -12,6 +12,7 @@ import {
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
 import SectionCard from '@/components/ui/SectionCard'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 type ProfileErrors = Partial<Record<'nickname' | 'contact' | 'submit', string>>
 type PasswordErrors = Partial<
@@ -19,6 +20,7 @@ type PasswordErrors = Partial<
 >
 
 export default function AccountSettingsPage() {
+  useDocumentTitle('내 계정 관리')
   const { user } = useAuth()
   if (!user) return null
 

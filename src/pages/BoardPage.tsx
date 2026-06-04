@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search, X, CalendarCheck } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -20,8 +20,10 @@ import {
   getDateBasisLabel,
   type DateBasis,
 } from '@/lib/dateBasis'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export default function BoardPage() {
+  useDocumentTitle('보드')
   const [searchParams, setSearchParams] = useSearchParams()
   const initialQuery = (searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH)
 
@@ -34,11 +36,15 @@ export default function BoardPage() {
   const [dateBasis, setDateBasis] = useState<DateBasis>('recruitEnd')
   const [queryError, setQueryError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const q = searchParams.get('q') ?? ''
-    setFilter((prev) => (prev.query === q ? prev : { ...prev, query: q }))
-    setDraftQuery((prev) => (prev === q ? prev : q))
-  }, [searchParams])
+  // URL의 q 파라미터가 바뀌면(예: 헤더 검색·뒤로가기) 로컬 상태에 반영한다.
+  // effect 대신 렌더 중 이전 값과 비교해 동기화한다.
+  const urlQuery = searchParams.get('q') ?? ''
+  const [syncedQuery, setSyncedQuery] = useState(urlQuery)
+  if (urlQuery !== syncedQuery) {
+    setSyncedQuery(urlQuery)
+    setFilter((prev) => (prev.query === urlQuery ? prev : { ...prev, query: urlQuery }))
+    setDraftQuery(urlQuery)
+  }
 
   const filteredByCondition = useMemo(
     () => filterRecruitments(mockRecruitments, filter),

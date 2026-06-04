@@ -4,10 +4,11 @@ import { Megaphone, Pin } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { mockNotices } from '@/data/mockNotices'
 import { NOTICE_CATEGORY_OPTIONS, type Notice, type NoticeCategory } from '@/types/notice'
-import { formatMonthDay } from '@/lib/date'
+import { formatFullDate } from '@/lib/date'
 import Chip from '@/components/ui/Chip'
 import EmptyState from '@/components/ui/EmptyState'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const PAGE_SIZE = 10
 
@@ -18,6 +19,7 @@ const sortedNotices = [...mockNotices].sort((a, b) =>
 )
 
 export default function NoticePage() {
+  useDocumentTitle('공지사항')
   const [searchParams, setSearchParams] = useSearchParams()
 
   const categoryParam = searchParams.get('category')
@@ -64,11 +66,6 @@ export default function NoticePage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
-      <h1 className="flex items-center gap-2 text-2xl font-bold text-stone-800 tracking-tight mb-8">
-        <Megaphone className="w-6 h-6 text-stone-400" strokeWidth={2} />
-        공지사항
-      </h1>
-
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Chip selected={category === 'all'} onClick={() => setCategory('all')}>
           전체
@@ -125,15 +122,19 @@ function NoticeRow({ notice }: { notice: Notice }) {
           : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50',
       )}
     >
-      {notice.isPinned && (
-        <Pin className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-      )}
-      <NoticeCategoryBadge category={notice.category} className="shrink-0" />
+      {/* 핀 슬롯 — 고정 너비로 비워둬 뱃지·제목 시작 위치를 항상 동일하게 유지 */}
+      <span className="flex w-4 shrink-0 justify-center">
+        {notice.isPinned && <Pin className="w-3.5 h-3.5 text-stone-400" />}
+      </span>
+      {/* 고정 너비 컨테이너로 제목 시작 위치는 통일하되, 뱃지 배경은 글자 폭에 맞춤 */}
+      <span className="flex w-20 shrink-0">
+        <NoticeCategoryBadge category={notice.category} />
+      </span>
       <p className="flex-1 min-w-0 truncate text-sm font-medium text-stone-700 group-hover:text-orange-600 transition-colors">
         {notice.title}
       </p>
-      <span className="shrink-0 text-[11px] text-stone-400">
-        {notice.author} · {formatMonthDay(notice.createdAt)}
+      <span className="shrink-0 text-xs text-stone-400">
+        {formatFullDate(notice.createdAt)}
       </span>
     </Link>
   )
@@ -146,9 +147,8 @@ function NoticeRowSkeleton() {
       aria-hidden
       className="flex items-center gap-3 rounded-xl border border-transparent p-4"
     >
-      <span className="inline-flex items-center rounded-full border border-transparent px-2.5 py-0.5 text-[11px] font-medium">
-        &nbsp;
-      </span>
+      <span className="w-4 shrink-0" />
+      <span className="w-20 shrink-0" />
       <span className="flex-1 text-sm">&nbsp;</span>
     </div>
   )

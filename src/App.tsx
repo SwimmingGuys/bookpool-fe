@@ -14,12 +14,15 @@ import AccountSettingsPage from '@/pages/mypage/AccountSettingsPage'
 import MyRecruitmentsPage from '@/pages/mypage/MyRecruitmentsPage'
 import NotificationSettingsPage from '@/pages/mypage/NotificationSettingsPage'
 import NotificationsPage from '@/pages/NotificationsPage'
+import NotFoundPage from '@/pages/NotFoundPage'
 import RequireAuth from '@/components/auth/RequireAuth'
 import ToastContainer from '@/components/ui/Toast'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -59,10 +62,12 @@ function App() {
             <Route path="recruitments" element={<MyRecruitmentsPage />} />
             <Route path="notifications" element={<NotificationSettingsPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-      <ToastContainer />
-    </BrowserRouter>
+        <ToastContainer />
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 

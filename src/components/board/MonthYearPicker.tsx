@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useDismissOnOutside } from '@/lib/useDismissOnOutside'
@@ -20,9 +20,11 @@ export default function MonthYearPicker({
   const close = useCallback(() => setOpen(false), [])
   useDismissOnOutside(ref, open, close)
 
-  useEffect(() => {
-    if (open) setPickerYear(year)
-  }, [open, year])
+  // 드롭다운을 열 때마다 선택 연도를 현재 연도로 맞춘다
+  const toggleOpen = () => {
+    if (!open) setPickerYear(year)
+    setOpen((o) => !o)
+  }
 
   const selectMonth = (m: number) => {
     onChange(pickerYear, m)
@@ -33,7 +35,7 @@ export default function MonthYearPicker({
     <div className="relative" ref={ref}>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         aria-expanded={open}
         className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-stone-100 transition-colors"
       >

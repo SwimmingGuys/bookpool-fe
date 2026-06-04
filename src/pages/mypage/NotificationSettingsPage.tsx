@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Bell, Pencil } from 'lucide-react'
 import {
   CATEGORIES,
@@ -18,6 +18,7 @@ import Button from '@/components/ui/Button'
 import Chip from '@/components/ui/Chip'
 import SearchInput from '@/components/ui/SearchInput'
 import SectionCard from '@/components/ui/SectionCard'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 function toggleInArray<T>(list: T[], value: T): T[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
@@ -31,6 +32,7 @@ const countBadge = (count: number) =>
   ) : null
 
 export default function NotificationSettingsPage() {
+  useDocumentTitle('알림 설정')
   const { user } = useAuth()
   const { subscription: saved, save } = useNotificationSubscriptions()
 
@@ -39,11 +41,6 @@ export default function NotificationSettingsPage() {
   const [publisherQuery, setPublisherQuery] = useState('')
 
   const allPublishers = useMemo(() => getAllPublishers(), [])
-
-  // Keep draft synced with saved when not editing (handles external updates)
-  useEffect(() => {
-    if (!isEditing) setDraft(saved)
-  }, [isEditing, saved])
 
   const filteredPublishers = useMemo(() => {
     const q = publisherQuery.trim().toLowerCase()

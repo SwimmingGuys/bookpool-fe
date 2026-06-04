@@ -7,6 +7,7 @@ import { validateEmail, validateRequiredPassword } from '@/lib/authValidation'
 import AuthLayout from '@/components/auth/AuthLayout'
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 type Field = 'email' | 'password'
 type Errors = Partial<Record<Field, string>>
@@ -18,6 +19,7 @@ function sanitizeRedirect(raw: string | null): string {
 }
 
 export default function LoginPage() {
+  useDocumentTitle('로그인')
   const { login } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()

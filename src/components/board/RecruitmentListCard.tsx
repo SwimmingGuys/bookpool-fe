@@ -98,14 +98,14 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
 
       <div className="mt-3 pt-3 border-t border-stone-100 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-[15px] font-bold text-stone-700 tabular-nums leading-none">
+          <span className="text-sm font-bold text-stone-700 tabular-nums leading-none">
             {formatMonthDay(recruitEndDate)}
           </span>
-          <span className="text-[11px] text-stone-400">
+          <span className="text-xs text-stone-400">
             ({getWeekdayKo(recruitEndDate)}) 마감
           </span>
         </div>
-        <span className="text-[10px] text-stone-300 tabular-nums shrink-0">
+        <span className="text-xs text-stone-300 tabular-nums shrink-0">
           조회 {formatViewCount(viewCount)}
         </span>
       </div>

@@ -11,11 +11,13 @@ import AuthLayout from '@/components/auth/AuthLayout'
 import EmailVerificationFields from '@/components/auth/EmailVerificationFields'
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 type Field = 'email' | 'newPassword' | 'confirm'
 type Errors = Partial<Record<Field | 'submit', string>>
 
 export default function ForgotPasswordPage() {
+  useDocumentTitle('비밀번호 찾기')
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
