@@ -6,14 +6,17 @@ import { mockRecruitments } from '@/data/mockRecruitments'
 import FilterPanel from '@/components/board/FilterPanel'
 import CalendarBoard from '@/components/board/CalendarBoard'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
+import SortDropdown from '@/components/board/SortDropdown'
+import ActiveFilterTags from '@/components/board/ActiveFilterTags'
 import EmptyState from '@/components/ui/EmptyState'
 import {
   emptyFilter,
   filterRecruitments,
-  sortByDeadline,
+  sortRecruitments,
   validateQuery,
   MAX_QUERY_LENGTH,
   type RecruitmentFilter,
+  type SortKey,
 } from '@/lib/recruitmentFilter'
 import {
   getDateByBasis,
@@ -34,6 +37,7 @@ export default function BoardPage() {
   const [draftQuery, setDraftQuery] = useState(initialQuery)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [dateBasis, setDateBasis] = useState<DateBasis>('recruitEnd')
+  const [sort, setSort] = useState<SortKey>('deadline')
   const [queryError, setQueryError] = useState<string | null>(null)
 
   // URL의 q 파라미터가 바뀌면(예: 헤더 검색·뒤로가기) 로컬 상태에 반영한다.
@@ -58,7 +62,10 @@ export default function BoardPage() {
     )
   }, [filteredByCondition, selectedDate, dateBasis])
 
-  const sorted = useMemo(() => sortByDeadline(dateFiltered), [dateFiltered])
+  const sorted = useMemo(
+    () => sortRecruitments(dateFiltered, sort),
+    [dateFiltered, sort],
+  )
 
   const handleChangeDateBasis = (next: DateBasis) => {
     setDateBasis(next)
@@ -148,7 +155,7 @@ export default function BoardPage() {
         </div>
 
         <section>
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
               {selectedDate && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">
@@ -166,16 +173,26 @@ export default function BoardPage() {
               </h2>
             </div>
 
-            {selectedDate && (
-              <button
-                type="button"
-                onClick={() => setSelectedDate(null)}
-                className="text-xs font-medium text-stone-500 hover:text-orange-600"
-              >
-                날짜 선택 해제
-              </button>
-            )}
+            <div className="flex items-center gap-2.5">
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs font-medium text-stone-500 hover:text-orange-600"
+                >
+                  날짜 선택 해제
+                </button>
+              )}
+              <SortDropdown value={sort} onChange={setSort} />
+            </div>
           </div>
+
+          <ActiveFilterTags
+            filter={filter}
+            onChange={setFilter}
+            onClearQuery={handleClearSearch}
+            className="mb-4"
+          />
 
           {sorted.length === 0 ? (
             <BoardEmpty
