@@ -13,9 +13,9 @@ dist-ssr
 *.local
 
 # Claude Code
-.claude/*
 .claude/settings.local.json
-.claude/CLAUDE.md
+CLAUDE.local.md
+.plawrite-mcp/*
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +27,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+

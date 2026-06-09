@@ -13,6 +13,7 @@ import AuthLayout from '@/components/auth/AuthLayout'
 import EmailVerificationFields from '@/components/auth/EmailVerificationFields'
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 type Field = 'email' | 'password' | 'confirm' | 'nickname'
 type Errors = Partial<Record<Field, string>>
@@ -24,6 +25,7 @@ function sanitizeRedirect(raw: string | null): string {
 }
 
 export default function SignupPage() {
+  useDocumentTitle('회원가입')
   const { signup } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()

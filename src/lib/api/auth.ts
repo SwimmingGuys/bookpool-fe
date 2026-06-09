@@ -21,8 +21,11 @@ export type AuthErrorCode =
   | 'NETWORK'
 
 export class AuthError extends Error {
-  constructor(public code: AuthErrorCode, message: string) {
+  code: AuthErrorCode
+
+  constructor(code: AuthErrorCode, message: string) {
     super(message)
+    this.code = code
     this.name = 'AuthError'
   }
 }

@@ -7,6 +7,7 @@ import { useNotifications, type Notification } from '@/lib/notifications'
 import { useNotificationSubscriptions } from '@/lib/notifications'
 import { TODAY_DATE } from '@/lib/date'
 import EmptyState from '@/components/ui/EmptyState'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 function formatRelativeTime(iso: string): string {
   const past = new Date(iso)
@@ -21,6 +22,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 export default function NotificationsPage() {
+  useDocumentTitle('알림')
   const { notifications, unreadCount, markAllAsRead, markAsRead } =
     useNotifications()
   const { subscription } = useNotificationSubscriptions()
@@ -33,21 +35,12 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
-      <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 ring-1 ring-orange-100">
-            <Bell className="w-6 h-6" strokeWidth={2.25} />
-          </div>
-          <h1 className="text-2xl font-bold text-stone-800 tracking-tight">
-            알림
-            {unreadCount > 0 && (
-              <span className="ml-2 text-orange-500 tabular-nums">
-                {unreadCount}
-              </span>
-            )}
-          </h1>
-        </div>
-        {unreadCount > 0 && (
+      {unreadCount > 0 && (
+        <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
+          <span className="text-xs font-medium text-stone-500">
+            읽지 않은 알림{' '}
+            <span className="text-orange-500 tabular-nums">{unreadCount}</span>개
+          </span>
           <button
             type="button"
             onClick={markAllAsRead}
@@ -55,8 +48,8 @@ export default function NotificationsPage() {
           >
             모두 읽음으로 표시
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {notifications.length === 0 ? (
         <NotificationsEmpty hasSubscription={hasSubscription} />
@@ -118,7 +111,7 @@ function NotificationCard({
             <span className="text-stone-300">·</span>
             <span className="text-stone-500">{recruitment.publisher}</span>
           </div>
-          <span className="text-[11px] text-stone-400 shrink-0 tabular-nums">
+          <span className="text-xs text-stone-400 shrink-0 tabular-nums">
             {formatRelativeTime(recruitment.recruitStartDate)}
           </span>
         </div>
@@ -140,13 +133,13 @@ function NotificationCard({
 
 function DDayLine({ recruitment }: { recruitment: Recruitment }) {
   if (recruitment.status === 'closed') {
-    return <p className="text-[11px] text-stone-400">모집 마감</p>
+    return <p className="text-xs text-stone-400">모집 마감</p>
   }
   const urgent = recruitment.daysRemaining <= 3
   return (
     <p
       className={cn(
-        'text-[11px] font-medium',
+        'text-xs font-medium',
         urgent ? 'text-red-500' : 'text-stone-500',
       )}
     >

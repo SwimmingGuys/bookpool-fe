@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, UserCog, ClipboardList, Bell, LogOut } from 'lucide-react'
+import { User, UserCog, ClipboardList, Bell, Headphones, LogOut } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useAuth } from '@/lib/auth'
 import { showToast } from '@/lib/toast'
@@ -10,6 +10,7 @@ const MENU_LINKS = [
   { to: '/mypage/account', label: '내 계정 관리', icon: UserCog },
   { to: '/mypage/recruitments', label: '공고 관리', icon: ClipboardList },
   { to: '/mypage/notifications', label: '알림 설정 관리', icon: Bell },
+  { to: '/support', label: '문의 / 요청', icon: Headphones },
 ]
 
 export default function UserMenu() {

@@ -1,27 +1,31 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, X, CalendarCheck } from 'lucide-react'
-import { cn } from '@/lib/cn'
+import { CalendarCheck } from 'lucide-react'
 import { mockRecruitments } from '@/data/mockRecruitments'
 import FilterPanel from '@/components/board/FilterPanel'
 import CalendarBoard from '@/components/board/CalendarBoard'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
+import SortDropdown from '@/components/board/SortDropdown'
+import ActiveFilterTags from '@/components/board/ActiveFilterTags'
+import BoardSearchBar from '@/components/board/BoardSearchBar'
 import EmptyState from '@/components/ui/EmptyState'
 import {
   emptyFilter,
   filterRecruitments,
-  sortByDeadline,
-  validateQuery,
+  sortRecruitments,
   MAX_QUERY_LENGTH,
   type RecruitmentFilter,
+  type SortKey,
 } from '@/lib/recruitmentFilter'
 import {
   getDateByBasis,
   getDateBasisLabel,
   type DateBasis,
 } from '@/lib/dateBasis'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export default function BoardPage() {
+  useDocumentTitle('보드')
   const [searchParams, setSearchParams] = useSearchParams()
   const initialQuery = (searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH)
 
@@ -29,16 +33,18 @@ export default function BoardPage() {
     ...emptyFilter,
     query: initialQuery,
   })
-  const [draftQuery, setDraftQuery] = useState(initialQuery)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [dateBasis, setDateBasis] = useState<DateBasis>('recruitEnd')
-  const [queryError, setQueryError] = useState<string | null>(null)
+  const [sort, setSort] = useState<SortKey>('deadline')
 
-  useEffect(() => {
-    const q = searchParams.get('q') ?? ''
-    setFilter((prev) => (prev.query === q ? prev : { ...prev, query: q }))
-    setDraftQuery((prev) => (prev === q ? prev : q))
-  }, [searchParams])
+  // URL의 q 파라미터가 바뀌면(예: 헤더 검색·뒤로가기) 필터에 반영한다.
+  // effect 대신 렌더 중 이전 값과 비교해 동기화한다.
+  const urlQuery = searchParams.get('q') ?? ''
+  const [syncedQuery, setSyncedQuery] = useState(urlQuery)
+  if (urlQuery !== syncedQuery) {
+    setSyncedQuery(urlQuery)
+    setFilter((prev) => (prev.query === urlQuery ? prev : { ...prev, query: urlQuery }))
+  }
 
   const filteredByCondition = useMemo(
     () => filterRecruitments(mockRecruitments, filter),
@@ -52,74 +58,31 @@ export default function BoardPage() {
     )
   }, [filteredByCondition, selectedDate, dateBasis])
 
-  const sorted = useMemo(() => sortByDeadline(dateFiltered), [dateFiltered])
+  const sorted = useMemo(
+    () => sortRecruitments(dateFiltered, sort),
+    [dateFiltered, sort],
+  )
 
   const handleChangeDateBasis = (next: DateBasis) => {
     setDateBasis(next)
     setSelectedDate(null)
   }
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const result = validateQuery(draftQuery)
-    if (!result.ok) {
-      setQueryError(result.error)
-      return
-    }
-    setQueryError(null)
-
+  // 검증을 통과한 검색어를 URL에 확정한다. 빈 문자열이면 q 파라미터 제거.
+  const handleCommitQuery = (query: string) => {
     const next = new URLSearchParams(searchParams)
-    if (result.query) next.set('q', result.query)
+    if (query) next.set('q', query)
     else next.delete('q')
     setSearchParams(next, { replace: true })
   }
 
-  const handleClearSearch = () => {
-    setDraftQuery('')
-    const next = new URLSearchParams(searchParams)
-    next.delete('q')
-    setSearchParams(next, { replace: true })
-    setQueryError(null)
-  }
-
   const toolbar = (
     <div className="flex items-start gap-3 flex-wrap">
-      <form onSubmit={handleSearchSubmit} className="w-full sm:flex-1 sm:min-w-[300px] sm:max-w-[440px]">
-        <label
-          className={cn(
-            'flex items-center gap-2.5 rounded-lg px-3.5 py-2 transition-all border',
-            'bg-stone-100 border-stone-100',
-            'hover:bg-stone-50 hover:border-stone-200',
-            'focus-within:bg-white focus-within:border-orange-400 focus-within:ring-4 focus-within:ring-orange-100',
-          )}
-        >
-          <Search className="h-4 w-4 text-stone-400 shrink-0" />
-          <input
-            type="text"
-            value={draftQuery}
-            onChange={(e) => setDraftQuery(e.target.value.slice(0, MAX_QUERY_LENGTH))}
-            placeholder="제목, 도서, 출판사 검색"
-            className="w-full min-w-0 bg-transparent text-sm text-stone-700 placeholder-stone-400 outline-none"
-          />
-          {draftQuery ? (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="p-0.5 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-200 shrink-0 transition-colors"
-              aria-label="검색어 지우기"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          ) : (
-            <kbd className="hidden sm:inline-flex items-center justify-center text-[10px] font-semibold text-stone-400 bg-white border border-stone-200 rounded px-1.5 py-0.5 shrink-0">
-              Enter
-            </kbd>
-          )}
-        </label>
-        {queryError && (
-          <p className="mt-1 text-xs text-red-500 px-1">{queryError}</p>
-        )}
-      </form>
+      <BoardSearchBar
+        committedQuery={urlQuery}
+        onCommit={handleCommitQuery}
+        className="w-full sm:flex-1 sm:min-w-[300px] sm:max-w-[440px]"
+      />
 
       <div className="h-9 w-px bg-stone-200 hidden sm:block mt-0.5" />
 
@@ -142,7 +105,7 @@ export default function BoardPage() {
         </div>
 
         <section>
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2.5">
               {selectedDate && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">
@@ -160,16 +123,26 @@ export default function BoardPage() {
               </h2>
             </div>
 
-            {selectedDate && (
-              <button
-                type="button"
-                onClick={() => setSelectedDate(null)}
-                className="text-xs font-medium text-stone-500 hover:text-orange-600"
-              >
-                날짜 선택 해제
-              </button>
-            )}
+            <div className="flex items-center gap-2.5">
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs font-medium text-stone-500 hover:text-orange-600"
+                >
+                  날짜 선택 해제
+                </button>
+              )}
+              <SortDropdown value={sort} onChange={setSort} />
+            </div>
           </div>
+
+          <ActiveFilterTags
+            filter={filter}
+            onChange={setFilter}
+            onClearQuery={() => handleCommitQuery('')}
+            className="mb-4"
+          />
 
           {sorted.length === 0 ? (
             <BoardEmpty

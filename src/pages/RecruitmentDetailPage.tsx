@@ -6,6 +6,7 @@ import { getRecruitmentById } from '@/data/mockRecruitments'
 import { useFavoriteWithAuth, useReadRecruitments } from '@/lib/recruitmentState'
 import Badge from '@/components/ui/Badge'
 import DDay from '@/components/ui/DDay'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export default function RecruitmentDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -20,6 +21,8 @@ export default function RecruitmentDetailPage() {
   useEffect(() => {
     if (recruitment) markAsRead(recruitment.id)
   }, [recruitment, markAsRead])
+
+  useDocumentTitle(recruitment ? recruitment.title.replace(/\n/g, ' ') : '공고')
 
   if (!recruitment) {
     return <NotFound />
@@ -48,7 +51,7 @@ export default function RecruitmentDetailPage() {
           )}
         </div>
         <div className="flex items-start justify-between gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-stone-800 leading-tight flex-1 min-w-0">
+          <h1 className="text-2xl font-bold text-stone-800 leading-tight flex-1 min-w-0">
             {recruitment.title.replace(/\n/g, ' ')}
           </h1>
           <div className="flex items-center gap-3 shrink-0 mt-2">

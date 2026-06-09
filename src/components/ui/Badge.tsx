@@ -15,7 +15,7 @@ export default function Badge({ label, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border',
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border',
         badgeStyles[label],
         className,
       )}

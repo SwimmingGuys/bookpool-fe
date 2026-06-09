@@ -3,6 +3,7 @@ import HowItWorks from '@/components/home/HowItWorks'
 import CategorySection from '@/components/home/CategorySection'
 import FeaturedSection from '@/components/home/FeaturedSection'
 import { mockRecruitments } from '@/data/mockRecruitments'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const featured = mockRecruitments
   .filter((r) => r.status === 'open' && r.daysRemaining >= 0)
@@ -10,6 +11,7 @@ const featured = mockRecruitments
   .slice(0, 8)
 
 export default function HomePage() {
+  useDocumentTitle()
   return (
     <>
       <HeroBanner />

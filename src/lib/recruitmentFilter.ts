@@ -63,6 +63,22 @@ export function filterRecruitments(
   })
 }
 
-export function sortByDeadline(recruitments: Recruitment[]): Recruitment[] {
-  return [...recruitments].sort((a, b) => a.daysRemaining - b.daysRemaining)
+export type SortKey = 'deadline' | 'popular'
+
+export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'deadline', label: '마감 임박순' },
+  { value: 'popular', label: '조회순' },
+]
+
+export function sortRecruitments(
+  recruitments: Recruitment[],
+  sort: SortKey,
+): Recruitment[] {
+  const list = [...recruitments]
+  switch (sort) {
+    case 'deadline':
+      return list.sort((a, b) => a.daysRemaining - b.daysRemaining)
+    case 'popular':
+      return list.sort((a, b) => b.viewCount - a.viewCount)
+  }
 }

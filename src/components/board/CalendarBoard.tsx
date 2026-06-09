@@ -210,7 +210,7 @@ export default function CalendarBoard({
                   <div
                     key={r.id}
                     className={cn(
-                      'truncate text-[13px] font-medium leading-snug px-2 py-0.5 border-l-2',
+                      'truncate text-xs font-medium leading-snug px-2 py-0.5 border-l-2',
                       r.badgeLabel === 'Reviewer'
                         ? 'border-orange-400 text-orange-700'
                         : 'border-stone-400 text-stone-700',

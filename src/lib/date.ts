@@ -8,6 +8,11 @@ export function formatMonthDay(iso: string): string {
   return iso.slice(5).replace('-', '.')
 }
 
+// 년.월.일 전체 표기 (예: 2026.05.23)
+export function formatFullDate(iso: string): string {
+  return iso.slice(0, 10).replaceAll('-', '.')
+}
+
 const weekdayCache = new Map<string, string>()
 
 export function getWeekdayKo(iso: string): string {

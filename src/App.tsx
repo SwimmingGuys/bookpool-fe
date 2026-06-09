@@ -3,6 +3,9 @@ import Layout from '@/components/layout/Layout'
 import HomePage from '@/pages/HomePage'
 import BoardPage from '@/pages/BoardPage'
 import RecruitmentDetailPage from '@/pages/RecruitmentDetailPage'
+import NoticePage from '@/pages/NoticePage'
+import NoticeDetailPage from '@/pages/NoticeDetailPage'
+import SupportPage from '@/pages/SupportPage'
 import LoginPage from '@/pages/LoginPage'
 import SignupPage from '@/pages/SignupPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
@@ -11,12 +14,15 @@ import AccountSettingsPage from '@/pages/mypage/AccountSettingsPage'
 import MyRecruitmentsPage from '@/pages/mypage/MyRecruitmentsPage'
 import NotificationSettingsPage from '@/pages/mypage/NotificationSettingsPage'
 import NotificationsPage from '@/pages/NotificationsPage'
+import NotFoundPage from '@/pages/NotFoundPage'
 import RequireAuth from '@/components/auth/RequireAuth'
 import ToastContainer from '@/components/ui/Toast'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -25,6 +31,16 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/recruitments/:id" element={<RecruitmentDetailPage />} />
+          <Route path="/notice" element={<NoticePage />} />
+          <Route path="/notice/:id" element={<NoticeDetailPage />} />
+          <Route
+            path="/support"
+            element={
+              <RequireAuth>
+                <SupportPage />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/notifications"
             element={
@@ -46,10 +62,12 @@ function App() {
             <Route path="recruitments" element={<MyRecruitmentsPage />} />
             <Route path="notifications" element={<NotificationSettingsPage />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-      <ToastContainer />
-    </BrowserRouter>
+        <ToastContainer />
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 
