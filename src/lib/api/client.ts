@@ -14,15 +14,16 @@ export const ENDPOINTS = {
   // 회원가입 이메일 인증 (EmailVerificationController)
   emailSendCode: '/signup/email/code',
   emailVerify: '/signup/email/verify',
-  // 비밀번호 재설정용 인증 (명세 미확정 — 확인 후 조정)
+  // 비밀번호 재설정 (방식 A — 코드 기반)
   resetSendCode: '/password/email/code',
   resetVerify: '/password/email/verify',
   resetPassword: '/password/reset',
   // 내 정보 조회 (MemberController)
   me: '/me',
-  // 프로필 수정 / 비밀번호 변경 (명세 미확정 — 확인 후 조정)
+  // 비밀번호 변경 (로그인 상태)
+  changePassword: '/me/password',
+  // 프로필 수정 (명세 미확정 — 확인 후 조정)
   updateProfile: '/members/me',
-  changePassword: '/members/me/password',
 } as const
 
 // 백엔드 공통 응답 래퍼 (kr.co.bookpool.common.response.ApiResult)
@@ -35,8 +36,11 @@ export interface ApiResult<T> {
 
 // 백엔드 에러 코드 → 프론트 AuthErrorCode 매핑. 명세 추가 시 여기에 항목을 늘린다.
 const SERVER_CODE_MAP: Record<string, AuthErrorCode> = {
-  M001: 'EMAIL_EXISTS', // 이미 사용 중인 이메일
+  M001: 'EMAIL_EXISTS', // 이미 사용 중인 이메일 (회원가입)
+  M002: 'USER_NOT_FOUND', // 가입되지 않은 이메일 (비밀번호 재설정 코드 발송)
   M004: 'CODE_INVALID', // 인증 코드가 올바르지 않거나 만료됨
+  M005: 'PASSWORD_INCORRECT', // 현재 비밀번호 불일치 (비밀번호 변경)
+  M006: 'EMAIL_NOT_VERIFIED', // 이메일 인증 미완료 (비밀번호 재설정)
   A002: 'NOT_AUTHENTICATED', // 유효하지 않은 인증 정보
   C001: 'VALIDATION', // 입력값 검증 실패 (data에 필드별 에러 배열)
 }
