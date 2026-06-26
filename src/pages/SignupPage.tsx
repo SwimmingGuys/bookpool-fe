@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
-import { AuthError } from '@/lib/api/auth'
+import { AuthError, type FieldError } from '@/lib/api/auth'
 import { showToast } from '@/lib/toast'
 import {
   PASSWORD_MIN_LENGTH,
@@ -42,6 +42,22 @@ export default function SignupPage() {
   const setEmailError = (msg: string | undefined) =>
     setErrors((p) => ({ ...p, email: msg }))
 
+  // 백엔드 검증 실패의 필드별 에러를 폼 필드에 매핑한다.
+  const applyFieldErrors = (fields: FieldError[]) => {
+    const next: Errors = {}
+    for (const { field, message } of fields) {
+      if (field === 'email') next.email = message
+      else if (field === 'password') next.password = message
+      else if (field === 'nickname') next.nickname = message
+    }
+    if (next.email) setEmailVerified(false)
+    if (next.email || next.password || next.nickname) {
+      setErrors((p) => ({ ...p, ...next }))
+    } else {
+      showToast('입력값을 확인해주세요.', 'error')
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -64,16 +80,28 @@ export default function SignupPage() {
       showToast('환영합니다! 회원가입이 완료되었습니다.', 'success')
       navigate(redirect, { replace: true })
     } catch (err) {
-      if (err instanceof AuthError && err.code === 'EMAIL_EXISTS') {
+      if (!(err instanceof AuthError)) {
+        showToast('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.', 'error')
+        return
+      }
+      // 가입은 됐지만 자동 로그인만 실패 → 로그인 페이지로 유도
+      if (err.code === 'SIGNUP_LOGIN_FAILED') {
+        showToast(err.message, 'info')
+        const query = redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : ''
+        navigate(`/login${query}`, { replace: true })
+        return
+      }
+      // 백엔드 검증 실패(C001) → 필드별 에러 표시
+      if (err.fields?.length) {
+        applyFieldErrors(err.fields)
+        return
+      }
+      if (err.code === 'EMAIL_EXISTS') {
         setErrors({ email: err.message })
         setEmailVerified(false)
-      } else {
-        const message =
-          err instanceof AuthError
-            ? err.message
-            : '회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.'
-        showToast(message, 'error')
+        return
       }
+      showToast(err.message, 'error')
     } finally {
       setSubmitting(false)
     }

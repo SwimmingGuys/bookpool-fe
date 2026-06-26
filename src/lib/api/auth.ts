@@ -1,8 +1,9 @@
 import type { User } from '@/types/user'
 import { apiRequest, ENDPOINTS, setAccessToken } from '@/lib/api/client'
+import { AuthError } from '@/lib/api/errors'
 
-export { AuthError } from '@/lib/api/errors'
-export type { AuthErrorCode } from '@/lib/api/errors'
+export { AuthError }
+export type { AuthErrorCode, FieldError } from '@/lib/api/errors'
 
 export interface AuthResponse {
   user: User
@@ -110,7 +111,16 @@ export async function signup(payload: SignupPayload): Promise<AuthResponse> {
       emailSubscribed: payload.emailSubscribed ?? false,
     },
   })
-  return login({ email, password: payload.password })
+  // 가입은 성공했으나 이어붙인 자동 로그인이 실패하면, 가입 실패로 오인하지 않도록
+  // 별도 코드로 구분해 호출부에서 로그인 페이지로 유도한다.
+  try {
+    return await login({ email, password: payload.password })
+  } catch {
+    throw new AuthError(
+      'SIGNUP_LOGIN_FAILED',
+      '회원가입은 완료됐어요. 로그인 페이지에서 다시 로그인해주세요.',
+    )
+  }
 }
 
 export async function logout(): Promise<void> {

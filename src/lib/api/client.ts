@@ -1,4 +1,4 @@
-import { AuthError, type AuthErrorCode } from '@/lib/api/errors'
+import { AuthError, type AuthErrorCode, type FieldError } from '@/lib/api/errors'
 
 // 백엔드 베이스 경로. 기본값 '/api'는 Vite dev 프록시(같은 오리진)를 전제로 한다.
 // 다른 오리진으로 직접 호출하려면 VITE_API_BASE_URL에 전체 URL을 지정한다.
@@ -38,6 +38,7 @@ const SERVER_CODE_MAP: Record<string, AuthErrorCode> = {
   M001: 'EMAIL_EXISTS', // 이미 사용 중인 이메일
   M004: 'CODE_INVALID', // 인증 코드가 올바르지 않거나 만료됨
   A002: 'NOT_AUTHENTICATED', // 유효하지 않은 인증 정보
+  C001: 'VALIDATION', // 입력값 검증 실패 (data에 필드별 에러 배열)
 }
 
 const KNOWN_CODES: ReadonlySet<AuthErrorCode> = new Set<AuthErrorCode>([
@@ -49,6 +50,8 @@ const KNOWN_CODES: ReadonlySet<AuthErrorCode> = new Set<AuthErrorCode>([
   'EMAIL_NOT_VERIFIED',
   'PASSWORD_INCORRECT',
   'NOT_AUTHENTICATED',
+  'VALIDATION',
+  'SIGNUP_LOGIN_FAILED',
   'NETWORK',
 ])
 
@@ -61,6 +64,8 @@ const DEFAULT_MESSAGES: Record<AuthErrorCode, string> = {
   EMAIL_NOT_VERIFIED: '이메일 인증을 완료해주세요.',
   PASSWORD_INCORRECT: '현재 비밀번호가 올바르지 않습니다.',
   NOT_AUTHENTICATED: '로그인이 필요합니다.',
+  VALIDATION: '입력값을 확인해주세요.',
+  SIGNUP_LOGIN_FAILED: '회원가입은 완료됐어요. 로그인 페이지에서 다시 로그인해주세요.',
   NETWORK: '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
 }
 
@@ -143,14 +148,33 @@ function tryReissue(): Promise<boolean> {
 async function toAuthError(response: Response): Promise<AuthError> {
   let code = fallbackCode(response.status)
   let message = DEFAULT_MESSAGES[code]
+  let fields: FieldError[] | undefined
   try {
-    const data = (await response.json()) as { code?: string; message?: string }
-    code = mapServerCode(data.code, response.status)
-    message = data.message?.trim() || DEFAULT_MESSAGES[code]
+    const body = (await response.json()) as {
+      code?: string
+      message?: string
+      data?: unknown
+    }
+    code = mapServerCode(body.code, response.status)
+    message = body.message?.trim() || DEFAULT_MESSAGES[code]
+    fields = parseFieldErrors(body.data)
   } catch {
     // 본문이 없거나 JSON이 아니면 상태코드 기반 기본값을 사용한다.
   }
-  return new AuthError(code, message)
+  return new AuthError(code, message, fields)
+}
+
+// 검증 실패(C001) 응답의 data 배열 → 필드별 에러로 변환
+function parseFieldErrors(data: unknown): FieldError[] | undefined {
+  if (!Array.isArray(data)) return undefined
+  const fields = data.filter(
+    (item): item is FieldError =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof (item as FieldError).field === 'string' &&
+      typeof (item as FieldError).message === 'string',
+  )
+  return fields.length > 0 ? fields : undefined
 }
 
 function mapServerCode(serverCode: string | undefined, status: number): AuthErrorCode {

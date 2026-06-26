@@ -3,6 +3,7 @@ const PASSWORD_HAS_LETTER = /[A-Za-z]/
 const PASSWORD_HAS_DIGIT = /\d/
 
 export const PASSWORD_MIN_LENGTH = 8
+export const PASSWORD_MAX_LENGTH = 64
 export const NICKNAME_MIN_LENGTH = 2
 export const NICKNAME_MAX_LENGTH = 12
 export const VERIFICATION_CODE_LENGTH = 6
@@ -25,8 +26,8 @@ export function validateEmail(value: string): string | undefined {
 
 export function validatePassword(value: string): string | undefined {
   if (!value) return '비밀번호를 입력해주세요.'
-  if (value.length < PASSWORD_MIN_LENGTH) {
-    return `비밀번호는 ${PASSWORD_MIN_LENGTH}자 이상이어야 합니다.`
+  if (value.length < PASSWORD_MIN_LENGTH || value.length > PASSWORD_MAX_LENGTH) {
+    return `비밀번호는 ${PASSWORD_MIN_LENGTH}자 이상 ${PASSWORD_MAX_LENGTH}자 이하여야 합니다.`
   }
   if (!PASSWORD_HAS_LETTER.test(value) || !PASSWORD_HAS_DIGIT.test(value)) {
     return '비밀번호는 영문과 숫자를 모두 포함해야 합니다.'
