@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import type { Recruitment, RecruitmentType } from '@/types/recruitment'
 import { useAuth } from '@/lib/auth'
+import {
+  getNotificationSubscription,
+  saveNotificationSubscription,
+} from '@/lib/api/notifications'
 
 export interface NotificationSubscription {
   types: RecruitmentType[]
@@ -29,57 +33,43 @@ function isRecruitmentType(value: unknown): value is RecruitmentType {
 
 let subscriptionUserId: string | null = null
 let subscriptionCache: NotificationSubscription = EMPTY_SUBSCRIPTION
+let subscriptionLoading: Promise<void> | null = null
 const subscriptionListeners = new Set<() => void>()
-
-function subscriptionKey(userId: string | null): string | null {
-  return userId ? `bookpool:notifications:${userId}` : null
-}
-
-function loadSubscription(userId: string | null): NotificationSubscription {
-  const key = subscriptionKey(userId)
-  if (!key || typeof window === 'undefined')
-    return { types: [], categories: [], publishers: [] }
-  try {
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return { types: [], categories: [], publishers: [] }
-    const parsed = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) {
-      return { types: [], categories: [], publishers: [] }
-    }
-    const obj = parsed as Record<string, unknown>
-    return {
-      types: Array.isArray(obj.types) ? obj.types.filter(isRecruitmentType) : [],
-      categories: Array.isArray(obj.categories)
-        ? obj.categories.filter((c): c is string => typeof c === 'string')
-        : [],
-      publishers: Array.isArray(obj.publishers)
-        ? obj.publishers.filter((p): p is string => typeof p === 'string')
-        : [],
-    }
-  } catch {
-    return { types: [], categories: [], publishers: [] }
-  }
-}
-
-function persistSubscription() {
-  const key = subscriptionKey(subscriptionUserId)
-  if (!key || typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(key, JSON.stringify(subscriptionCache))
-  } catch {
-    // ignore
-  }
-}
 
 function emitSubscription() {
   subscriptionListeners.forEach((l) => l())
 }
 
+function normalizeSubscription(value: NotificationSubscription): NotificationSubscription {
+  return {
+    types: value.types.filter(isRecruitmentType),
+    categories: value.categories.filter((item): item is string => typeof item === 'string'),
+    publishers: value.publishers.filter((item): item is string => typeof item === 'string'),
+  }
+}
+
+async function refreshSubscription(userId: string | null): Promise<void> {
+  if (!userId) {
+    subscriptionCache = EMPTY_SUBSCRIPTION
+    emitSubscription()
+    return
+  }
+  if (subscriptionLoading) return subscriptionLoading
+  subscriptionLoading = getNotificationSubscription()
+    .then((subscription) => {
+      subscriptionCache = normalizeSubscription(subscription)
+      emitSubscription()
+    })
+    .finally(() => {
+      subscriptionLoading = null
+    })
+  return subscriptionLoading
+}
+
 function syncSubscriptionUser(userId: string | null) {
   if (userId === subscriptionUserId) return
   subscriptionUserId = userId
-  subscriptionCache = loadSubscription(userId)
-  emitSubscription()
+  void refreshSubscription(userId)
 }
 
 function subscriptionSubscribe(cb: () => void) {
@@ -153,8 +143,8 @@ export function useNotificationSubscriptions() {
     save: (next: NotificationSubscription) => {
       if (!user) return
       subscriptionCache = next
-      persistSubscription()
       emitSubscription()
+      saveNotificationSubscription(next).catch(() => undefined)
     },
   }
 }

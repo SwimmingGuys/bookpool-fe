@@ -1,14 +1,7 @@
+import { apiRequest, ApiError } from '@/lib/api/http'
 import type { Admin } from '@/types/admin'
 
-const MOCK_LATENCY_MS = 400
-
-// 시드된 백오피스 관리자 계정. 실제 백엔드가 붙기 전까지 사용하는 데모 자격증명이다.
-// 로그인: username = 'admin', password = 'admin1234'
-const SEED_ADMINS: (Admin & { password: string })[] = [
-  { id: 'admin_seed_1', username: 'admin', password: 'admin1234', name: '관리자' },
-]
-
-export type AdminAuthErrorCode = 'INVALID_CREDENTIALS' | 'NOT_AUTHENTICATED'
+export type AdminAuthErrorCode = 'INVALID_CREDENTIALS' | 'NOT_AUTHENTICATED' | 'FORBIDDEN' | string
 
 export class AdminAuthError extends Error {
   code: AdminAuthErrorCode
@@ -30,30 +23,53 @@ export interface AdminAuthResponse {
   accessToken: string
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+interface LoginResponse {
+  accessToken: string
+  tokenType: string
 }
 
-function makeToken(adminId: string): string {
-  const payload = `${adminId}.${Date.now()}.${Math.random().toString(36).slice(2)}`
-  return typeof btoa === 'function' ? btoa(payload) : payload
+interface MeResponse {
+  id: number
+  email: string
+  nickname: string
+  role: string
 }
 
-function toPublicAdmin({ password: _password, ...rest }: Admin & { password: string }): Admin {
-  return rest
-}
-
-export async function login(payload: AdminLoginPayload): Promise<AdminAuthResponse> {
-  await delay(MOCK_LATENCY_MS)
-  const username = payload.username.trim().toLowerCase()
-  const found = SEED_ADMINS.find(
-    (a) => a.username === username && a.password === payload.password,
-  )
-  if (!found) {
-    throw new AdminAuthError(
-      'INVALID_CREDENTIALS',
-      '아이디 또는 비밀번호가 올바르지 않습니다.',
-    )
+function toAdmin(response: MeResponse): Admin {
+  return {
+    id: String(response.id),
+    username: response.email,
+    name: response.nickname,
   }
-  return { admin: toPublicAdmin(found), accessToken: makeToken(found.id) }
+}
+
+function toAdminAuthError(error: unknown): AdminAuthError {
+  if (error instanceof ApiError) {
+    return new AdminAuthError(error.code, error.message)
+  }
+  return new AdminAuthError('NOT_AUTHENTICATED', '로그인에 실패했습니다.')
+}
+
+export async function login(
+  payload: AdminLoginPayload,
+): Promise<AdminAuthResponse> {
+  try {
+    const loginResponse = await apiRequest<LoginResponse>('/api/login', {
+      method: 'POST',
+      body: {
+        email: payload.username.trim().toLowerCase(),
+        password: payload.password,
+      },
+    })
+    const me = await apiRequest<MeResponse>('/api/me', {
+      accessToken: loginResponse.accessToken,
+    })
+    if (me.role !== 'ADMIN') {
+      throw new AdminAuthError('FORBIDDEN', '관리자 권한이 없는 계정입니다.')
+    }
+    return { admin: toAdmin(me), accessToken: loginResponse.accessToken }
+  } catch (error) {
+    if (error instanceof AdminAuthError) throw error
+    throw toAdminAuthError(error)
+  }
 }

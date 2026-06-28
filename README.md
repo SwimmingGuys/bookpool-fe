@@ -20,7 +20,7 @@
 
 **BookPool**은 출판사가 도서의 **서평단·베타리더를 모집**하고, 독자가 관심 도서의 모집 공고를 탐색·신청 흐름을 살펴볼 수 있는 한국어 웹 서비스입니다. 마감일 기반 **캘린더 보드**로 모집 일정을 한눈에 보고, 관심 분야·유형으로 필터링하며, 백오피스에서 모집글과 리뷰를 직접 관리합니다.
 
-> 현재 버전은 **백엔드 없이 프런트엔드만으로 완결되는 데모**입니다. 모든 데이터(인증·모집·리뷰·알림 등)는 브라우저 `localStorage`에 저장되며, `src/lib/api`·`src/lib`의 스토어가 추후 실제 API가 들어설 자리(seam) 역할을 합니다.
+> 현재 프런트엔드는 BookPool 백엔드 API와 연동됩니다. 기본 API 주소는 `http://localhost:8080`이며, 다른 주소를 사용할 때는 `VITE_API_BASE_URL`을 설정하세요.
 
 ---
 
@@ -82,24 +82,23 @@ npm run lint
 
 > 별도의 테스트 러너는 없으며, 타입 체크는 `npx tsc -b`로 단독 실행할 수 있습니다.
 
-### 🔑 데모 계정 (백오피스)
+### 백엔드 API 주소
 
-| 항목 | 값 |
-| --- | --- |
-| 주소 | `/admin/login` |
-| 아이디 | `admin` |
-| 비밀번호 | `admin1234` |
+```bash
+# 기본값: http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8080 npm run dev
+```
 
-일반 사용자 계정은 `/signup`에서 직접 가입할 수 있습니다(이메일 인증 코드는 화면/콘솔로 전달되는 mock).
+회원가입 이메일 인증 코드는 백엔드 설정에 따라 메일 또는 서버 로그로 발송됩니다. 관리자 페이지는 백엔드의 `ADMIN` 권한 계정으로 로그인해야 접근할 수 있습니다.
 
 ---
 
 ## 🏗️ 아키텍처 한눈에 보기
 
-- **백엔드 없음** — 모든 "API"는 `src/lib/api`에 mock으로 구현되며 `localStorage`에 영속화됩니다. 컴포넌트는 `localStorage`를 직접 만지지 않고 `lib/`의 훅을 통해 접근합니다.
+- **백엔드 API 연동** — `src/lib/api`의 HTTP 클라이언트가 Spring 백엔드의 `/api/*` 엔드포인트를 호출합니다.
 - **자체 외부 스토어** — Context/Redux 대신 `useSyncExternalStore`를 사용합니다.
   - `lib/createStore.ts` — `localStorage` 영속화 + 탭 간 동기화를 지원하는 제네릭 스토어 (`auth`, `toast`, `admin-auth` 등)
-  - 사용자별 모듈 스토어 — 즐겨찾기·최근 본·알림 등
+  - API 기반 모듈 스토어 — 모집글·즐겨찾기·최근 본·알림·문의 등
 - **타입드 에러** — 인증 흐름은 `AuthError`/`AdminAuthError`로 `code`별 분기, 한국어 `message` 노출
 - **결정론적 날짜** — `lib/date.ts`의 고정 "오늘"(`TODAY_ISO`)을 기준으로 캘린더·mock 데이터가 매 실행마다 동일하게 유지됩니다.
 - **한국어 UI** — 모든 사용자 노출 문구는 한국어, 도메인 값(모집 유형 등)은 라벨 맵으로 변환합니다.
@@ -110,8 +109,8 @@ npm run lint
 src/
 ├─ pages/            # 라우트 단위 페이지 (home, board, mypage, admin …)
 ├─ components/       # ui · auth · board · home · layout · admin · notice
-├─ lib/              # 스토어 · mock API · 유틸 (auth, adminRecruitments, recruitmentsSource …)
-├─ data/             # 결정론적 mock 데이터 (mockRecruitments, mockNotices)
+├─ lib/              # API 클라이언트 · 스토어 · 유틸 (auth, adminRecruitments, recruitmentsSource …)
+├─ data/             # 이전 mock 데이터 / 로컬 데모 보조 데이터
 └─ types/            # 도메인 타입 (recruitment, user, admin, review …)
 ```
 

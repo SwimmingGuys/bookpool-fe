@@ -28,7 +28,7 @@ export default function AdminLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!username.trim() || !password) {
-      showToast('아이디와 비밀번호를 입력해주세요.', 'warning')
+      showToast('이메일과 비밀번호를 입력해주세요.', 'warning')
       return
     }
     setSubmitting(true)
@@ -51,9 +51,9 @@ export default function AdminLoginPage() {
     <AuthLayout title="관리자 로그인">
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <FormField
-          label="아이디"
+          label="이메일"
           autoComplete="username"
-          placeholder="admin"
+          placeholder="admin@example.com"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={submitting}

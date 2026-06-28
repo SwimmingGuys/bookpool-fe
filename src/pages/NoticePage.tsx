@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Megaphone, Pin } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import { mockNotices } from '@/data/mockNotices'
 import { NOTICE_CATEGORY_OPTIONS, type Notice, type NoticeCategory } from '@/types/notice'
+import { listNotices } from '@/lib/api/notices'
 import { formatFullDate } from '@/lib/date'
 import Chip from '@/components/ui/Chip'
 import EmptyState from '@/components/ui/EmptyState'
@@ -15,13 +15,10 @@ const PAGE_SIZE = 10
 
 type CategoryFilter = NoticeCategory | 'all'
 
-const sortedNotices = [...mockNotices].sort((a, b) =>
-  b.createdAt.localeCompare(a.createdAt),
-)
-
 export default function NoticePage() {
   useDocumentTitle('공지사항')
   const [searchParams, setSearchParams] = useSearchParams()
+  const [notices, setNotices] = useState<Notice[]>([])
 
   const categoryParam = searchParams.get('category')
   const category: CategoryFilter = NOTICE_CATEGORY_OPTIONS.some(
@@ -30,12 +27,30 @@ export default function NoticePage() {
     ? (categoryParam as NoticeCategory)
     : 'all'
 
+  useEffect(() => {
+    let ignore = false
+    listNotices({ size: 100 })
+      .then((page) => {
+        if (!ignore) {
+          setNotices(
+            [...page.content].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+          )
+        }
+      })
+      .catch(() => {
+        if (!ignore) setNotices([])
+      })
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   const filtered = useMemo(
     () =>
       category === 'all'
-        ? sortedNotices
-        : sortedNotices.filter((n) => n.category === category),
-    [category],
+        ? notices
+        : notices.filter((n) => n.category === category),
+    [category, notices],
   )
   const pinned = useMemo(() => filtered.filter((n) => n.isPinned), [filtered])
   const normal = useMemo(() => filtered.filter((n) => !n.isPinned), [filtered])

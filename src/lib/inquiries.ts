@@ -1,74 +1,46 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { useAuth } from '@/lib/auth'
-import { TODAY_ISO } from '@/lib/date'
-import type { Inquiry, InquiryType } from '@/types/inquiry'
+import type { Inquiry } from '@/types/inquiry'
+import {
+  createInquiry,
+  listInquiries,
+  type SubmitInquiryPayload,
+} from '@/lib/api/inquiries'
+
+export type { SubmitInquiryPayload } from '@/lib/api/inquiries'
 
 const EMPTY: readonly Inquiry[] = []
 
-function isInquiryArray(value: unknown): value is Inquiry[] {
-  return Array.isArray(value)
-}
-
-function loadInquiries(userId: string | null): Inquiry[] {
-  const key = inquiriesKey(userId)
-  if (!key || typeof window === 'undefined') return []
-  try {
-    const raw = window.localStorage.getItem(key)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return isInquiryArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
-}
-
-function saveInquiries(userId: string | null, value: Inquiry[]) {
-  const key = inquiriesKey(userId)
-  if (!key || typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // ignore quota
-  }
-}
-
-function makeId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  return `inquiry_${Date.now()}_${Math.random().toString(36).slice(2)}`
-}
-
-// ---------- Per-user inquiry store ----------
-
 let inquiriesUserId: string | null = null
 let inquiriesCache: Inquiry[] = []
+let loading: Promise<void> | null = null
 const listeners = new Set<() => void>()
 
-function inquiriesKey(userId: string | null): string | null {
-  return userId ? `bookpool:inquiries:${userId}` : null
-}
-
 function emit() {
-  listeners.forEach((l) => l())
+  listeners.forEach((listener) => listener())
 }
 
-function syncUser(userId: string | null) {
-  if (userId === inquiriesUserId) return
-  inquiriesUserId = userId
-  inquiriesCache = loadInquiries(userId)
-  emit()
+function subscribe(listener: () => void) {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
 }
 
-function subscribe(cb: () => void) {
-  listeners.add(cb)
-  return () => {
-    listeners.delete(cb)
+async function refreshInquiries(userId: string | null): Promise<void> {
+  if (!userId) {
+    inquiriesCache = []
+    emit()
+    return
   }
-}
-
-export interface SubmitInquiryPayload {
-  type: InquiryType
-  title: string
-  content: string
+  if (loading) return loading
+  loading = listInquiries()
+    .then((items) => {
+      inquiriesCache = items
+      emit()
+    })
+    .finally(() => {
+      loading = null
+    })
+  return loading
 }
 
 export function useInquiries() {
@@ -76,7 +48,9 @@ export function useInquiries() {
   const userId = user?.id ?? null
 
   useEffect(() => {
-    syncUser(userId)
+    if (userId === inquiriesUserId) return
+    inquiriesUserId = userId
+    void refreshInquiries(userId)
   }, [userId])
 
   const list = useSyncExternalStore(
@@ -92,18 +66,14 @@ export function useInquiries() {
 
   return {
     inquiries,
-    submitInquiry: (payload: SubmitInquiryPayload) => {
+    submitInquiry: async (payload: SubmitInquiryPayload) => {
       if (!user) return
-      const inquiry: Inquiry = {
-        id: makeId(),
+      const inquiry = await createInquiry({
         type: payload.type,
         title: payload.title.trim(),
         content: payload.content.trim(),
-        status: 'pending',
-        createdAt: TODAY_ISO,
-      }
+      })
       inquiriesCache = [inquiry, ...inquiriesCache]
-      saveInquiries(inquiriesUserId, inquiriesCache)
       emit()
     },
   }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Bell, Pencil } from 'lucide-react'
 import {
   CATEGORIES,
@@ -6,7 +6,7 @@ import {
   RECRUITMENT_TYPE_OPTIONS,
   type RecruitmentType,
 } from '@/types/recruitment'
-import { getAllPublishers } from '@/data/mockRecruitments'
+import { listPublishers } from '@/lib/api/campaigns'
 import {
   subscriptionsEqual,
   useNotificationSubscriptions,
@@ -39,8 +39,21 @@ export default function NotificationSettingsPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState<NotificationSubscription>(saved)
   const [publisherQuery, setPublisherQuery] = useState('')
+  const [allPublishers, setAllPublishers] = useState<string[]>([])
 
-  const allPublishers = useMemo(() => getAllPublishers(), [])
+  useEffect(() => {
+    let ignore = false
+    listPublishers()
+      .then((publishers) => {
+        if (!ignore) setAllPublishers(publishers)
+      })
+      .catch(() => {
+        if (!ignore) setAllPublishers([])
+      })
+    return () => {
+      ignore = true
+    }
+  }, [])
 
   const filteredPublishers = useMemo(() => {
     const q = publisherQuery.trim().toLowerCase()

@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Pin } from 'lucide-react'
-import { getNoticeById } from '@/data/mockNotices'
+import { getNotice } from '@/lib/api/notices'
+import type { Notice } from '@/types/notice'
 import { formatFullDate } from '@/lib/date'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
 import { useNoticeReadState } from '@/lib/noticeReadState'
@@ -9,15 +10,35 @@ import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export default function NoticeDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const notice = id ? getNoticeById(id) : undefined
+  const [notice, setNotice] = useState<Notice | null | undefined>(undefined)
   const { markAsRead } = useNoticeReadState()
 
   useDocumentTitle(notice ? notice.title : '공지사항')
+
+  useEffect(() => {
+    if (!id) {
+      setNotice(null)
+      return
+    }
+    let ignore = false
+    getNotice(id)
+      .then((item) => {
+        if (!ignore) setNotice(item)
+      })
+      .catch(() => {
+        if (!ignore) setNotice(null)
+      })
+    return () => {
+      ignore = true
+    }
+  }, [id])
 
   // 로그인 상태에서 공지를 열면 읽음으로 표시한다.
   useEffect(() => {
     if (notice) markAsRead(notice.id)
   }, [notice, markAsRead])
+
+  if (notice === undefined) return null
 
   if (!notice) {
     return <NotFound />
