@@ -15,6 +15,11 @@ import MyRecruitmentsPage from '@/pages/mypage/MyRecruitmentsPage'
 import NotificationSettingsPage from '@/pages/mypage/NotificationSettingsPage'
 import NotificationsPage from '@/pages/NotificationsPage'
 import NotFoundPage from '@/pages/NotFoundPage'
+import AdminLoginPage from '@/pages/admin/AdminLoginPage'
+import AdminRecruitmentsPage from '@/pages/admin/AdminRecruitmentsPage'
+import AdminRecruitmentFormPage from '@/pages/admin/AdminRecruitmentFormPage'
+import AdminLayout from '@/components/admin/AdminLayout'
+import RequireAdmin from '@/components/admin/RequireAdmin'
 import RequireAuth from '@/components/auth/RequireAuth'
 import ToastContainer from '@/components/ui/Toast'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -27,6 +32,20 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminLayout />
+            </RequireAdmin>
+          }
+        >
+          <Route index element={<Navigate to="recruitments" replace />} />
+          <Route path="recruitments" element={<AdminRecruitmentsPage />} />
+          <Route path="recruitments/new" element={<AdminRecruitmentFormPage />} />
+          <Route path="recruitments/:id" element={<AdminRecruitmentFormPage />} />
+        </Route>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="/board" element={<BoardPage />} />

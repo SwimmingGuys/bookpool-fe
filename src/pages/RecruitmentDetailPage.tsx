@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, Eye, Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import { getRecruitmentById } from '@/data/mockRecruitments'
+import { useAllRecruitments } from '@/lib/recruitmentsSource'
 import { useFavoriteWithAuth, useReadRecruitments } from '@/lib/recruitmentState'
 import Badge from '@/components/ui/Badge'
 import DDay from '@/components/ui/DDay'
@@ -12,10 +12,11 @@ export default function RecruitmentDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { markAsRead } = useReadRecruitments()
   const { isFavorite, toggleFavorite } = useFavoriteWithAuth()
+  const allRecruitments = useAllRecruitments()
 
   const recruitment = useMemo(
-    () => (id ? getRecruitmentById(id) : undefined),
-    [id],
+    () => (id ? allRecruitments.find((r) => r.id === id) : undefined),
+    [allRecruitments, id],
   )
 
   useEffect(() => {

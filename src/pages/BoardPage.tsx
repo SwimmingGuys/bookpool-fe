@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CalendarCheck } from 'lucide-react'
-import { mockRecruitments } from '@/data/mockRecruitments'
+import { useAllRecruitments } from '@/lib/recruitmentsSource'
 import FilterPanel from '@/components/board/FilterPanel'
 import CalendarBoard from '@/components/board/CalendarBoard'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
@@ -36,6 +36,7 @@ export default function BoardPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [dateBasis, setDateBasis] = useState<DateBasis>('recruitEnd')
   const [sort, setSort] = useState<SortKey>('deadline')
+  const allRecruitments = useAllRecruitments()
 
   // URL의 q 파라미터가 바뀌면(예: 헤더 검색·뒤로가기) 필터에 반영한다.
   // effect 대신 렌더 중 이전 값과 비교해 동기화한다.
@@ -47,8 +48,8 @@ export default function BoardPage() {
   }
 
   const filteredByCondition = useMemo(
-    () => filterRecruitments(mockRecruitments, filter),
-    [filter],
+    () => filterRecruitments(allRecruitments, filter),
+    [allRecruitments, filter],
   )
 
   const dateFiltered = useMemo(() => {
