@@ -1,17 +1,22 @@
+import { useMemo } from 'react'
 import HeroBanner from '@/components/home/HeroBanner'
 import HowItWorks from '@/components/home/HowItWorks'
 import CategorySection from '@/components/home/CategorySection'
 import FeaturedSection from '@/components/home/FeaturedSection'
-import { mockRecruitments } from '@/data/mockRecruitments'
+import { useAllRecruitments } from '@/lib/recruitmentsSource'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
-
-const featured = mockRecruitments
-  .filter((r) => r.status === 'open' && r.daysRemaining >= 0)
-  .sort((a, b) => a.daysRemaining - b.daysRemaining)
-  .slice(0, 8)
 
 export default function HomePage() {
   useDocumentTitle()
+  const allRecruitments = useAllRecruitments()
+  const featured = useMemo(
+    () =>
+      allRecruitments
+        .filter((r) => r.status === 'open' && r.daysRemaining >= 0)
+        .sort((a, b) => a.daysRemaining - b.daysRemaining)
+        .slice(0, 8),
+    [allRecruitments],
+  )
   return (
     <>
       <HeroBanner />
