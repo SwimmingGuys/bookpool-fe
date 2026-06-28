@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import RecruitmentForm from '@/components/admin/RecruitmentForm'
@@ -17,6 +17,7 @@ export default function AdminRecruitmentFormPage() {
   const isEdit = Boolean(id)
   const navigate = useNavigate()
   const recruitments = useAdminRecruitments()
+  const [submitting, setSubmitting] = useState(false)
 
   const recruitment = useMemo(
     () => (id ? recruitments.find((r) => r.id === id) : undefined),
@@ -25,15 +26,22 @@ export default function AdminRecruitmentFormPage() {
 
   useDocumentTitle(isEdit ? '서평단 수정' : '새 서평단 등록')
 
-  const handleSubmit = (input: RecruitmentInput) => {
-    if (isEdit && id) {
-      updateRecruitment(id, input)
-      showToast('모집글을 수정했습니다.', 'success')
-    } else {
-      createRecruitment(input)
-      showToast('모집글을 등록했습니다.', 'success')
+  const handleSubmit = async (input: RecruitmentInput) => {
+    setSubmitting(true)
+    try {
+      if (isEdit && id) {
+        await updateRecruitment(id, input)
+        showToast('모집글을 수정했습니다.', 'success')
+      } else {
+        await createRecruitment(input)
+        showToast('모집글을 등록했습니다.', 'success')
+      }
+      navigate('/admin/recruitments')
+    } catch {
+      showToast('모집글 저장에 실패했습니다.', 'error')
+    } finally {
+      setSubmitting(false)
     }
-    navigate('/admin/recruitments')
   }
 
   if (isEdit && !recruitment) {
@@ -70,6 +78,7 @@ export default function AdminRecruitmentFormPage() {
         <RecruitmentForm
           initial={recruitment}
           submitLabel={isEdit ? '수정 저장' : '등록'}
+          submitting={submitting}
           onSubmit={handleSubmit}
           onCancel={() => navigate('/admin/recruitments')}
         />

@@ -17,10 +17,14 @@ export default function AdminRecruitmentsPage() {
   const recruitments = useAdminRecruitments()
   const navigate = useNavigate()
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (!window.confirm(`'${title}' 모집글을 삭제할까요?`)) return
-    deleteRecruitment(id)
-    showToast('모집글을 삭제했습니다.', 'success')
+    try {
+      await deleteRecruitment(id)
+      showToast('모집글을 삭제했습니다.', 'success')
+    } catch {
+      showToast('모집글 삭제에 실패했습니다.', 'error')
+    }
   }
 
   return (

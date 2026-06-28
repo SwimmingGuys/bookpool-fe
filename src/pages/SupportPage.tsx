@@ -63,7 +63,7 @@ export default function SupportPage() {
     setErrors({})
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const next: Errors = {
       title: validateTitle(title),
@@ -76,7 +76,7 @@ export default function SupportPage() {
     setErrors({})
     setSubmitting(true)
     try {
-      submitInquiry({ type, title, content })
+      await submitInquiry({ type, title, content })
       showToast('문의가 접수되었습니다.', 'success')
       resetForm()
       setTab('history')

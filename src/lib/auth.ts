@@ -57,6 +57,7 @@ export function useAuth() {
       return res
     },
     logout: () => {
+      void authApi.logout()
       authStore.set(INITIAL)
     },
     updateProfile: async (payload: authApi.UpdateProfilePayload) => {

@@ -5,6 +5,7 @@ import {
   AuthError,
   sendVerificationCode,
   verifyCode,
+  verifyResetCode,
   type VerificationIntent,
 } from '@/lib/api/auth'
 import {
@@ -73,11 +74,11 @@ export default function EmailVerificationFields({
     setEmailError(undefined)
     setSendingCode(true)
     try {
-      const res = await sendVerificationCode(email, { intent })
+      await sendVerificationCode(email, { intent })
       setCode('')
       setCodeError(undefined)
       setCodeSent(true)
-      showToast(`인증번호: ${res.code} (개발용)`, 'info', 8000)
+      showToast('인증번호를 발송했습니다. 메일함을 확인해주세요.', 'info')
     } catch (e) {
       if (e instanceof AuthError) setEmailError(e.message)
       else setEmailError('인증번호 발송에 실패했습니다.')
@@ -95,7 +96,8 @@ export default function EmailVerificationFields({
     setCodeError(undefined)
     setVerifyingCode(true)
     try {
-      await verifyCode(email, code)
+      if (intent === 'reset') await verifyResetCode(email, code)
+      else await verifyCode(email, code)
       setIsVerified(true)
       showToast('이메일이 인증되었습니다.', 'success')
     } catch (e) {
