@@ -31,7 +31,8 @@ export class ApiError extends Error {
 }
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:8080'
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ??
+  (typeof window !== 'undefined' ? window.location.origin : '')
 
 function readStoredToken(storageKey: string): string | null {
   if (typeof window === 'undefined') return null
