@@ -101,6 +101,8 @@ VITE_API_BASE_URL=http://localhost:8080/api
 - **조회 상태 훅** — `useAsyncData`가 로딩·에러·재시도를 담당하고, 화면은 스켈레톤 / `ErrorState` / `EmptyState` 세 상태를 모두 그립니다.
 - **서버사이드 검색** — 검색·필터·정렬·페이지네이션은 서버가 합니다. 클라이언트 필터는 즐겨찾기 보기처럼 이미 전부 받아둔 목록에만 씁니다.
 - **자체 외부 스토어** — Context/Redux 대신 `useSyncExternalStore`. `createStore`(영속·탭 간 동기화)와 사용자별 모듈 스토어(즐겨찾기·최근 본·알림)를 함께 씁니다.
+- **공용 페이지 셸** — 모든 화면이 `PageContainer`(narrow/default/wide)와 `PageHeader`를 씁니다. 폭·여백·제목 스타일이 한 곳에서 정해집니다.
+- **반응형** — 모바일 우선. 캘린더는 `md` 미만에서 compact 셀로 바뀌고, 탭·칩 줄은 넘치면 가로로 스크롤됩니다. 백오피스는 사이드바가 숨는 모바일에서 상단 탭으로 이동합니다.
 - **한국어 UI** — 모든 사용자 노출 문구는 한국어, 도메인 값은 라벨 맵으로 변환합니다.
 
 ### 디렉터리 구조
@@ -122,7 +124,7 @@ src/
 | `/` | 홈 | 공개 |
 | `/board`, `/recruitments/:id` | 모집 보드·상세 | 공개 |
 | `/publishers/:name` | 출판사별 모집 | 공개 |
-| `/notice`, `/notice/:id` | 공지사항 | 공개 |
+| `/notice`, `/notice/:id` | 공지사항 (푸터 · 모바일 메뉴에서 진입) | 공개 |
 | `/login`, `/signup`, `/forgot-password` | 인증 | 공개 |
 | `/mypage/*`, `/notifications`, `/support` | 마이페이지·알림·문의 | 로그인 필요 |
 | `/admin/login` | 관리자 로그인 | 공개 |

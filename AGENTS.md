@@ -72,8 +72,24 @@ All routes are in `src/App.tsx`. Auth pages (`/login`, `/signup`, `/forgot-passw
 ### SEO / sharing
 `usePageMeta` (`lib/useDocumentTitle.ts`) sets title, description, OG/Twitter tags and canonical per route; `og:image` is only emitted when a real image exists. Postings spread by link, so keep detail pages calling it. Note the app is CSR — crawlers that don't run JS see only `index.html`'s defaults, so per-posting previews still need prerendering.
 
+### Page shell — don't hand-roll containers or titles
+Every page renders inside `components/layout/PageContainer.tsx` (`narrow` 3xl / `default` 5xl / `wide` 7xl) and titles come from `components/layout/PageHeader.tsx` (title, description, `backTo`, `actions`). Widths and outer padding live *only* in `PageContainer` — pages used to pick their own `max-w-*` and `px-6 py-10`, which is why five different widths coexisted. `Layout` renders `Header` + `<Outlet>` + `Footer`.
+
 ### Styling
-Compose class names with `cn()` from `lib/cn.ts` (clsx + tailwind-merge). `components/ui/` holds reusable primitives (`Button`, `Badge`, `Chip`, `Toast`, `Skeleton`, `ErrorState`, `StarRating`, `ShareButton`); `components/{home,board,auth,layout,recruitment,notice,admin}/` hold feature components.
+Compose class names with `cn()` from `lib/cn.ts` (clsx + tailwind-merge). `components/ui/` holds reusable primitives (`Button`, `ButtonLink`, `Badge`, `Chip`, `Toast`, `Skeleton`, `ErrorState`, `StarRating`, `ShareButton`); `components/{home,board,auth,layout,recruitment,notice,admin}/` hold feature components.
+
+House rules:
+- **Palette is stone (neutral) + orange (accent).** No `gray-*`, no second accent hue.
+- **Never write button classes by hand.** `Button` for actions, `ButtonLink` for navigation — both read from `components/ui/buttonStyles.ts`.
+- **Radius:** list/grid cards `rounded-xl`, panels and sections `rounded-2xl`.
+- **Section padding:** `p-4 sm:p-5` for compact cards, `p-5 sm:p-6` for panels.
+
+### Responsive
+Mobile-first; `md` (768px) is where the layout actually changes shape.
+- Horizontal rows of tabs/chips scroll instead of wrapping: `-mx-4 overflow-x-auto scrollbar-none px-4 sm:mx-0 sm:px-0`, with `shrink-0` on the items. `scrollbar-none` is a custom `@utility` in `src/index.css`.
+- The calendar has two modes: below `md` each day cell is compact (day number, count, one dot per posting); at `md`+ it shows book-title previews. Keep both working when touching `CalendarBoard`.
+- The admin sidebar is `hidden md:flex`, so `AdminLayout` also renders a scrollable top tab bar under `md` — don't remove it, mobile has no other way to navigate the back office.
+- Verify at 375px that `document.documentElement.scrollWidth === innerWidth`; horizontal overflow is a bug.
 
 ## Conventions
 
