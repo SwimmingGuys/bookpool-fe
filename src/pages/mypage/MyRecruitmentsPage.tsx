@@ -154,7 +154,7 @@ export default function MyRecruitmentsPage() {
       <div
         role="tablist"
         aria-label="공고 관리 탭"
-        className="flex items-center gap-1 border-b border-stone-200"
+        className="-mx-4 flex items-center gap-1 overflow-x-auto scrollbar-none border-b border-stone-200 px-4 sm:mx-0 sm:px-0"
       >
         {TABS.map(({ value, label, icon: Icon }) => {
           const isActive = activeTab === value
@@ -166,7 +166,7 @@ export default function MyRecruitmentsPage() {
               aria-selected={isActive}
               onClick={() => setActiveTab(value)}
               className={cn(
-                'relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors',
+                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-sm font-semibold transition-colors sm:px-4',
                 isActive ? 'text-orange-600' : 'text-stone-500 hover:text-stone-800',
               )}
             >
@@ -346,12 +346,12 @@ function Toolbar({
   onSortChange: (next: SortValue) => void
 }) {
   return (
-    <div className="my-5 flex items-center gap-2">
+    <div className="my-5 flex flex-col gap-2 sm:flex-row sm:items-center">
       <SearchInput
         value={query}
         onChange={onQueryChange}
         placeholder="제목, 도서, 출판사 검색"
-        className="max-w-md flex-1"
+        className="flex-1 sm:max-w-md"
       />
 
       <div className="relative">

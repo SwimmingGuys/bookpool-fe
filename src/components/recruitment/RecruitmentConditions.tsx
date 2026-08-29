@@ -31,7 +31,7 @@ export default function RecruitmentConditions({
   if (!hasAny) return null
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-6">
+    <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
       <h2 className="mb-4 text-base font-semibold text-stone-800">모집 조건</h2>
 
       <dl className="grid grid-cols-1 gap-y-3 gap-x-6 text-sm sm:grid-cols-2">

@@ -13,6 +13,8 @@ import DDay from '@/components/ui/DDay'
 import Skeleton from '@/components/ui/Skeleton'
 import ErrorState from '@/components/ui/ErrorState'
 import ShareButton from '@/components/ui/ShareButton'
+import ButtonLink from '@/components/ui/ButtonLink'
+import PageContainer from '@/components/layout/PageContainer'
 import ApplyBar from '@/components/recruitment/ApplyBar'
 import RecruitmentConditions from '@/components/recruitment/RecruitmentConditions'
 import ReviewSection from '@/components/recruitment/ReviewSection'
@@ -51,16 +53,10 @@ export default function RecruitmentDetailPage() {
   const fav = isFavorite(recruitment.id)
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
-      <Link
-        to="/board"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-stone-500 no-underline hover:text-stone-700"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        보드로 돌아가기
-      </Link>
+    <PageContainer>
+      <PageHeaderBack />
 
-      <header className="mb-8">
+      <header className="mb-6 sm:mb-8">
         <div className="mb-3 flex items-center gap-2">
           <Badge label={recruitment.badgeLabel} />
           {isClosed ? (
@@ -70,11 +66,22 @@ export default function RecruitmentDetailPage() {
           )}
         </div>
 
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="min-w-0 flex-1 text-2xl font-bold leading-tight text-stone-800">
-            {plainTitle}
-          </h1>
-          <div className="mt-2 flex shrink-0 items-center gap-2">
+        <h1 className="text-xl font-bold leading-tight text-stone-800 sm:text-2xl">
+          {plainTitle}
+        </h1>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-stone-500">
+            <Link
+              to={`/publishers/${encodeURIComponent(recruitment.publisher)}`}
+              className="font-medium text-stone-600 no-underline hover:text-orange-600"
+            >
+              {recruitment.publisher}
+            </Link>{' '}
+            · {recruitment.category}
+          </p>
+
+          <div className="flex shrink-0 items-center gap-2">
             <span className="inline-flex items-center gap-1 text-sm text-stone-400">
               <Eye className="h-4 w-4" />
               {recruitment.viewCount.toLocaleString()}
@@ -99,28 +106,18 @@ export default function RecruitmentDetailPage() {
             </button>
           </div>
         </div>
-
-        <p className="mt-3 text-sm text-stone-500">
-          <Link
-            to={`/publishers/${encodeURIComponent(recruitment.publisher)}`}
-            className="font-medium text-stone-600 no-underline hover:text-orange-600"
-          >
-            {recruitment.publisher}
-          </Link>{' '}
-          · {recruitment.category}
-        </p>
       </header>
 
       <ApplyBar recruitment={recruitment} className="mb-6" />
 
-      <section className="mb-6 rounded-2xl border border-stone-200 bg-white p-6">
+      <section className="mb-4 rounded-2xl border border-stone-200 bg-white p-5 sm:mb-6 sm:p-6">
         <h2 className="mb-3 text-base font-semibold text-stone-800">도서 소개</h2>
         <p className="whitespace-pre-line text-sm leading-relaxed text-stone-600">
           {recruitment.description}
         </p>
       </section>
 
-      <section className="mb-6 rounded-2xl border border-stone-200 bg-white p-6">
+      <section className="mb-4 rounded-2xl border border-stone-200 bg-white p-5 sm:mb-6 sm:p-6">
         <h2 className="mb-4 text-base font-semibold text-stone-800">일정</h2>
         <dl className="grid grid-cols-1 gap-y-3 gap-x-6 text-sm sm:grid-cols-2">
           <InfoRow
@@ -136,11 +133,11 @@ export default function RecruitmentDetailPage() {
         </dl>
       </section>
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <RecruitmentConditions recruitment={recruitment} />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <ReviewSection recruitmentId={recruitment.id} />
       </div>
 
@@ -158,7 +155,19 @@ export default function RecruitmentDetailPage() {
           </a>
         </p>
       )}
-    </div>
+    </PageContainer>
+  )
+}
+
+function PageHeaderBack() {
+  return (
+    <Link
+      to="/board"
+      className="mb-4 inline-flex items-center gap-1 text-sm text-stone-500 no-underline transition-colors hover:text-stone-700"
+    >
+      <ArrowLeft className="h-4 w-4" />
+      보드로 돌아가기
+    </Link>
   )
 }
 
@@ -184,7 +193,7 @@ function InfoRow({
 
 function DetailSkeleton() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
+    <PageContainer>
       <Skeleton className="h-4 w-28" />
       <Skeleton className="mt-6 h-5 w-20 rounded-full" />
       <Skeleton className="mt-3 h-8 w-3/4" />
@@ -192,35 +201,34 @@ function DetailSkeleton() {
       <Skeleton className="mt-8 h-24 w-full rounded-2xl" />
       <Skeleton className="mt-6 h-40 w-full rounded-2xl" />
       <Skeleton className="mt-6 h-32 w-full rounded-2xl" />
-    </div>
+    </PageContainer>
   )
 }
 
 function LoadFailed({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="mx-auto max-w-2xl px-6 py-20">
+    <PageContainer width="narrow" className="py-16 sm:py-20">
       <ErrorState
         title="공고를 불러오지 못했습니다."
         description="네트워크 상태를 확인한 뒤 다시 시도해 주세요."
         onRetry={onRetry}
       />
-    </div>
+    </PageContainer>
   )
 }
 
 function NotFound() {
   return (
-    <div className="mx-auto max-w-2xl px-6 py-20 text-center">
-      <h1 className="text-2xl font-bold text-stone-800">존재하지 않는 공고입니다</h1>
+    <PageContainer width="narrow" className="py-16 text-center sm:py-24">
+      <h1 className="text-xl font-bold text-stone-800 sm:text-2xl">
+        존재하지 않는 공고입니다
+      </h1>
       <p className="mt-2 text-sm text-stone-500">
         삭제되었거나 잘못된 링크로 접근했을 수 있어요.
       </p>
-      <Link
-        to="/board"
-        className="mt-6 inline-block rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-orange-600"
-      >
+      <ButtonLink to="/board" size="lg" className="mt-6">
         보드로 돌아가기
-      </Link>
-    </div>
+      </ButtonLink>
+    </PageContainer>
   )
 }

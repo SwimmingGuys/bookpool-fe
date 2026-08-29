@@ -263,7 +263,7 @@ export default function RecruitmentForm({
       <ImageUpload value={coverImage} onChange={setCoverImage} />
 
       {/* ---------- 신청 · 모집 조건 ---------- */}
-      <fieldset className="rounded-xl border border-stone-200 p-5">
+      <fieldset className="rounded-xl border border-stone-200 p-4 sm:p-5">
         <legend className="px-1.5 text-sm font-semibold text-stone-700">
           신청 · 모집 조건
         </legend>
@@ -377,7 +377,7 @@ export default function RecruitmentForm({
       </fieldset>
 
       {/* ---------- 수집 출처 ---------- */}
-      <fieldset className="rounded-xl border border-stone-200 p-5">
+      <fieldset className="rounded-xl border border-stone-200 p-4 sm:p-5">
         <legend className="px-1.5 text-sm font-semibold text-stone-700">
           수집 출처
         </legend>
@@ -413,7 +413,7 @@ export default function RecruitmentForm({
 
       {error && <p className="text-sm font-medium text-red-500">{error}</p>}
 
-      <div className="flex items-center justify-end gap-2 border-t border-stone-100 pt-5">
+      <div className="flex flex-col-reverse gap-2 border-t border-stone-100 pt-5 sm:flex-row sm:items-center sm:justify-end">
         <Button
           type="button"
           variant="ghost"

@@ -105,7 +105,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
   }
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-6">
+    <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <h2 className="text-base font-semibold text-stone-800">

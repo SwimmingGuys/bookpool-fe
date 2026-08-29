@@ -20,6 +20,7 @@ import {
 import { formatFullDate } from '@/lib/date'
 import { showToast } from '@/lib/toast'
 import { AuthError } from '@/lib/api/errors'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 // 검수 큐(draft)와 게시된 공고(published)를 탭으로 나눈다.
@@ -71,24 +72,25 @@ export default function AdminRecruitmentsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-stone-800">서평단 관리</h1>
-          <p className="mt-1 text-sm text-stone-500">
-            {status === 'success'
-              ? `${PUBLISH_STATUS_LABELS[tab]} ${recruitments.length}건`
-              : '불러오는 중...'}
-          </p>
-        </div>
-        <Button onClick={() => navigate('/admin/recruitments/new')}>
-          <Plus className="h-4 w-4" />새 서평단 등록
-        </Button>
-      </div>
+      <PageHeader
+        title="서평단 관리"
+        description={
+          status === 'success'
+            ? `${PUBLISH_STATUS_LABELS[tab]} ${recruitments.length}건`
+            : '불러오는 중...'
+        }
+        actions={
+          <Button onClick={() => navigate('/admin/recruitments/new')}>
+            <Plus className="h-4 w-4" />새 서평단 등록
+          </Button>
+        }
+        className="mb-6"
+      />
 
       <div
         role="tablist"
         aria-label="게시 상태"
-        className="mb-4 flex items-center gap-1 border-b border-stone-200"
+        className="-mx-4 mb-4 flex items-center gap-1 overflow-x-auto scrollbar-none border-b border-stone-200 px-4 sm:mx-0 sm:px-0"
       >
         {TABS.map((item) => {
           const active = tab === item.value
@@ -100,7 +102,7 @@ export default function AdminRecruitmentsPage() {
               aria-selected={active}
               onClick={() => setTab(item.value)}
               className={cn(
-                'relative px-4 py-2.5 text-sm font-semibold transition-colors',
+                'relative shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors',
                 active ? 'text-orange-600' : 'text-stone-500 hover:text-stone-800',
               )}
             >
@@ -152,13 +154,13 @@ export default function AdminRecruitmentsPage() {
             return (
               <li
                 key={r.id}
-                className="flex items-start gap-4 rounded-xl border border-stone-200 bg-white p-4"
+                className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 sm:flex-row sm:items-start sm:gap-4"
               >
                 {r.coverImage && (
                   <img
                     src={r.coverImage}
                     alt=""
-                    className="h-20 w-15 shrink-0 rounded-md border border-stone-100 object-cover"
+                    className="h-24 w-16 shrink-0 rounded-md border border-stone-100 object-cover"
                   />
                 )}
 
@@ -222,7 +224,7 @@ export default function AdminRecruitmentsPage() {
                   )}
                 </div>
 
-                <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className="flex shrink-0 items-center justify-between gap-2 border-t border-stone-100 pt-3 sm:flex-col sm:items-end sm:border-0 sm:pt-0">
                   <div className="flex items-center gap-1">
                     <Link
                       to={`/admin/recruitments/${r.id}`}

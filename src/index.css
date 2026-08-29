@@ -9,6 +9,15 @@ body {
   color: #1a1a1a;
 }
 
+/* 가로 스크롤 되는 탭·칩 줄에서 스크롤바를 감춘다. 스크롤 자체는 그대로 동작한다. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

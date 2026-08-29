@@ -10,6 +10,8 @@ import {
 import type { NotificationKind } from '@/lib/api/notifications'
 import { formatRelativeTime } from '@/lib/date'
 import EmptyState from '@/components/ui/EmptyState'
+import PageContainer from '@/components/layout/PageContainer'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const KIND_LABELS: Record<NotificationKind, string> = {
@@ -34,22 +36,34 @@ export default function NotificationsPage() {
   const hasSubscription = !isSubscriptionEmpty(subscription)
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      {unreadCount > 0 && (
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-medium text-stone-500">
-            읽지 않은 알림{' '}
-            <span className="text-orange-500 tabular-nums">{unreadCount}</span>개
-          </span>
-          <button
-            type="button"
-            onClick={markAllAsRead}
-            className="text-xs font-medium text-stone-500 underline-offset-2 hover:text-orange-600 hover:underline"
-          >
-            모두 읽음으로 표시
-          </button>
-        </div>
-      )}
+    <PageContainer width="narrow">
+      <PageHeader
+        title="알림"
+        description={
+          unreadCount > 0 ? (
+            <>
+              읽지 않은 알림{' '}
+              <span className="font-semibold text-orange-500 tabular-nums">
+                {unreadCount}
+              </span>
+              개
+            </>
+          ) : (
+            '구독한 조건에 맞는 새 공고를 여기에서 알려드려요.'
+          )
+        }
+        actions={
+          unreadCount > 0 ? (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="text-xs font-medium text-stone-500 underline-offset-2 hover:text-orange-600 hover:underline"
+            >
+              모두 읽음으로 표시
+            </button>
+          ) : undefined
+        }
+      />
 
       {notifications.length === 0 ? (
         <NotificationsEmpty hasSubscription={hasSubscription} />
@@ -64,7 +78,7 @@ export default function NotificationsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 

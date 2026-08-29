@@ -20,6 +20,8 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import Button from '@/components/ui/Button'
 import { RecruitmentGridSkeleton } from '@/components/ui/Skeleton'
+import PageContainer from '@/components/layout/PageContainer'
+import PageHeader from '@/components/layout/PageHeader'
 import {
   deadlineToWithinDays,
   emptyFilter,
@@ -177,105 +179,108 @@ export default function BoardPage() {
   )
 
   return (
-    <div className="min-h-full">
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-10">
-          <CalendarBoard
-            recruitments={calendarItems}
-            selectedDate={selectedDate}
-            onSelectDate={setSelectedDate}
-            dateBasis={dateBasis}
-            onChangeDateBasis={handleChangeDateBasis}
-            year={month.year}
-            monthIndex={month.index}
-            onChangeMonth={handleChangeMonth}
-            loading={calendarLoading}
-            toolbar={toolbar}
-          />
-        </div>
+    <PageContainer width="wide">
+      <PageHeader
+        title="모집 보드"
+        description="모집 시작·마감·발표일 기준으로 일정을 확인하고, 관심 조건만 골라 보세요."
+      />
 
-        <section>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              {selectedDate && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700">
-                  <CalendarCheck className="h-3.5 w-3.5" />
-                  {selectedDate}
+      <div className="mb-8 sm:mb-10">
+        <CalendarBoard
+          recruitments={calendarItems}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          dateBasis={dateBasis}
+          onChangeDateBasis={handleChangeDateBasis}
+          year={month.year}
+          monthIndex={month.index}
+          onChangeMonth={handleChangeMonth}
+          loading={calendarLoading}
+          toolbar={toolbar}
+        />
+      </div>
+
+      <section>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            {selectedDate && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-xs font-bold text-orange-700">
+                <CalendarCheck className="h-3.5 w-3.5" />
+                {selectedDate}
+              </span>
+            )}
+            <h2 className="text-base font-bold text-stone-700">
+              {selectedDate ? `${getDateBasisLabel(dateBasis)} 공고` : '전체 공고'}
+              {!isLoading && (
+                <span className="ml-2 text-sm font-bold text-orange-500">
+                  {visibleCount}
                 </span>
               )}
-              <h2 className="text-base font-bold text-stone-700">
-                {selectedDate ? `${getDateBasisLabel(dateBasis)} 공고` : '전체 공고'}
-                {!isLoading && (
-                  <span className="ml-2 text-sm font-bold text-orange-500">
-                    {visibleCount}
-                  </span>
-                )}
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              {selectedDate && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedDate(null)}
-                  className="text-xs font-medium text-stone-500 hover:text-orange-600"
-                >
-                  날짜 선택 해제
-                </button>
-              )}
-              <SortDropdown value={sort} onChange={setSort} />
-            </div>
+            </h2>
           </div>
 
-          <ActiveFilterTags
-            filter={filter}
-            onChange={setFilter}
-            onClearQuery={() => handleCommitQuery('')}
-            className="mb-4"
+          <div className="flex items-center gap-2.5">
+            {selectedDate && (
+              <button
+                type="button"
+                onClick={() => setSelectedDate(null)}
+                className="text-xs font-medium text-stone-500 hover:text-orange-600"
+              >
+                날짜 선택 해제
+              </button>
+            )}
+            <SortDropdown value={sort} onChange={setSort} />
+          </div>
+        </div>
+
+        <ActiveFilterTags
+          filter={filter}
+          onChange={setFilter}
+          onClearQuery={() => handleCommitQuery('')}
+          className="mb-4"
+        />
+
+        {isLoading ? (
+          <RecruitmentGridSkeleton />
+        ) : !dateFiltered && !favoriteMatches && list.status === 'error' ? (
+          <ErrorState
+            title="공고를 불러오지 못했습니다."
+            description="네트워크 상태를 확인한 뒤 다시 시도해 주세요."
+            onRetry={list.reload}
           />
+        ) : visible.length === 0 ? (
+          <BoardEmpty
+            query={filter.query}
+            selectedDate={selectedDate}
+            dateBasis={dateBasis}
+            favoritesOnly={favoritesOnly}
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {visible.map((r) => (
+                <RecruitmentListCard key={r.id} recruitment={r} />
+              ))}
+            </div>
 
-          {isLoading ? (
-            <RecruitmentGridSkeleton />
-          ) : !dateFiltered && !favoriteMatches && list.status === 'error' ? (
-            <ErrorState
-              title="공고를 불러오지 못했습니다."
-              description="네트워크 상태를 확인한 뒤 다시 시도해 주세요."
-              onRetry={list.reload}
-            />
-          ) : visible.length === 0 ? (
-            <BoardEmpty
-              query={filter.query}
-              selectedDate={selectedDate}
-              dateBasis={dateBasis}
-              favoritesOnly={favoritesOnly}
-            />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {visible.map((r) => (
-                  <RecruitmentListCard key={r.id} recruitment={r} />
-                ))}
+            {/* 날짜 선택·즐겨찾기 보기는 이미 전부 받아둔 상태라 더 보기가 없다. */}
+            {canLoadMore && (
+              <div className="mt-6 flex justify-center">
+                <Button
+                  variant="secondary"
+                  onClick={list.loadMore}
+                  disabled={list.isLoadingMore}
+                >
+                  {list.isLoadingMore
+                    ? '불러오는 중...'
+                    : `공고 더 보기 (${list.recruitments.length}/${list.total})`}
+                </Button>
               </div>
-
-              {/* 날짜 선택·즐겨찾기 보기는 이미 전부 받아둔 상태라 더 보기가 없다. */}
-              {canLoadMore && (
-                <div className="mt-6 flex justify-center">
-                  <Button
-                    variant="secondary"
-                    onClick={list.loadMore}
-                    disabled={list.isLoadingMore}
-                  >
-                    {list.isLoadingMore
-                      ? '불러오는 중...'
-                      : `공고 더 보기 (${list.recruitments.length}/${list.total})`}
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-      </div>
-    </div>
+            )}
+          </>
+        )}
+      </section>
+    </PageContainer>
   )
 }
 

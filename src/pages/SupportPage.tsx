@@ -15,6 +15,8 @@ import Chip from '@/components/ui/Chip'
 import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
+import PageContainer from '@/components/layout/PageContainer'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const TABS = [
@@ -88,11 +90,16 @@ export default function SupportPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
+    <PageContainer width="narrow">
+      <PageHeader
+        title="문의 / 요청"
+        description="서비스 이용 중 불편한 점이나 추가했으면 하는 기능을 알려주세요."
+      />
+
       <div
         role="tablist"
         aria-label="문의 탭"
-        className="flex items-center gap-1 border-b border-stone-200 mb-6"
+        className="-mx-4 mb-6 flex items-center gap-1 overflow-x-auto scrollbar-none border-b border-stone-200 px-4 sm:mx-0 sm:px-0"
       >
         {TABS.map(({ value, label }) => {
           const active = tab === value
@@ -104,7 +111,7 @@ export default function SupportPage() {
               aria-selected={active}
               onClick={() => setTab(value)}
               className={cn(
-                'relative px-4 py-2.5 text-sm font-semibold transition-colors',
+                'relative shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors',
                 active ? 'text-orange-600' : 'text-stone-500 hover:text-stone-800',
               )}
             >
@@ -200,7 +207,7 @@ export default function SupportPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 

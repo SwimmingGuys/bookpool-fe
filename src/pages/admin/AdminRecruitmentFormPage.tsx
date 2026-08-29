@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
 import RecruitmentForm from '@/components/admin/RecruitmentForm'
 import ReviewManager from '@/components/admin/ReviewManager'
 import Skeleton from '@/components/ui/Skeleton'
@@ -14,6 +13,7 @@ import {
 } from '@/lib/adminRecruitments'
 import { showToast } from '@/lib/toast'
 import { AuthError } from '@/lib/api/errors'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 export default function AdminRecruitmentFormPage() {
@@ -97,26 +97,20 @@ export default function AdminRecruitmentFormPage() {
 
   return (
     <div>
-      <Link
-        to="/admin/recruitments"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-stone-500 no-underline hover:text-stone-700"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        서평단 관리로 돌아가기
-      </Link>
+      <PageHeader
+        backTo="/admin/recruitments"
+        backLabel="서평단 관리로 돌아가기"
+        title={isEdit ? '서평단 수정' : '새 서평단 등록'}
+        actions={
+          isEdit && recruitment ? (
+            <Button variant="secondary" size="sm" onClick={handleToggleStatus}>
+              {recruitment.status === 'open' ? '모집 마감하기' : '모집 다시 열기'}
+            </Button>
+          ) : undefined
+        }
+      />
 
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <h1 className="text-xl font-bold text-stone-800">
-          {isEdit ? '서평단 수정' : '새 서평단 등록'}
-        </h1>
-        {isEdit && recruitment && (
-          <Button variant="secondary" size="sm" onClick={handleToggleStatus}>
-            {recruitment.status === 'open' ? '모집 마감하기' : '모집 다시 열기'}
-          </Button>
-        )}
-      </div>
-
-      <div className="rounded-2xl border border-stone-200 bg-white p-6">
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6">
         <RecruitmentForm
           initial={recruitment ?? undefined}
           submitLabel={isEdit ? '수정 저장' : '등록하고 게시'}

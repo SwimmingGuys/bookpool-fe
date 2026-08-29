@@ -23,6 +23,7 @@ import {
   type Notice,
   type NoticeCategory,
 } from '@/types/notice'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const EMPTY: Notice[] = []
@@ -108,23 +109,24 @@ export default function AdminNoticesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-stone-800">공지사항 관리</h1>
-          <p className="mt-1 text-sm text-stone-500">
-            {status === 'success' ? `등록된 공지 ${data.length}건` : '불러오는 중...'}
-          </p>
-        </div>
-        <Button onClick={() => setDraft({ ...EMPTY_DRAFT })}>
-          <Plus className="h-4 w-4" />새 공지 작성
-        </Button>
-      </div>
+      <PageHeader
+        title="공지사항 관리"
+        description={
+          status === 'success' ? `등록된 공지 ${data.length}건` : '불러오는 중...'
+        }
+        actions={
+          <Button onClick={() => setDraft({ ...EMPTY_DRAFT })}>
+            <Plus className="h-4 w-4" />새 공지 작성
+          </Button>
+        }
+        className="mb-6"
+      />
 
       {draft && (
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="mb-6 flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-6"
+          className="mb-6 flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-5 sm:p-6"
         >
           <div className="flex flex-col gap-1.5">
             <label htmlFor="notice-title" className="text-sm font-semibold text-stone-700">
@@ -232,10 +234,10 @@ export default function AdminNoticesPage() {
           {data.map((notice) => (
             <li
               key={notice.id}
-              className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white p-4"
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-stone-200 bg-white p-4"
             >
               <span className="flex w-4 shrink-0 justify-center">
-                {notice.isPinned && <Pin className="h-3.5 h-3.5 w-3.5 text-stone-400" />}
+                {notice.isPinned && <Pin className="h-3.5 w-3.5 text-stone-400" />}
               </span>
               <span className="flex w-20 shrink-0">
                 <NoticeCategoryBadge category={notice.category} />
@@ -246,7 +248,7 @@ export default function AdminNoticesPage() {
               <span className="shrink-0 text-xs text-stone-400">
                 {formatFullDate(notice.createdAt)}
               </span>
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="ml-auto flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   aria-label="수정"

@@ -16,6 +16,7 @@ import {
   type Inquiry,
   type InquiryStatus,
 } from '@/types/inquiry'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const EMPTY: Inquiry[] = []
@@ -74,17 +75,16 @@ export default function AdminInquiriesPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-stone-800">문의 관리</h1>
-        <p className="mt-1 text-sm text-stone-500">
-          {status === 'success' ? `${data.length}건` : '불러오는 중...'}
-        </p>
-      </div>
+      <PageHeader
+        title="문의 관리"
+        description={status === 'success' ? `${data.length}건` : '불러오는 중...'}
+        className="mb-6"
+      />
 
       <div
         role="tablist"
         aria-label="문의 상태"
-        className="mb-4 flex items-center gap-1 border-b border-stone-200"
+        className="-mx-4 mb-4 flex items-center gap-1 overflow-x-auto scrollbar-none border-b border-stone-200 px-4 sm:mx-0 sm:px-0"
       >
         {TABS.map((item) => {
           const active = tab === item.value
@@ -96,7 +96,7 @@ export default function AdminInquiriesPage() {
               aria-selected={active}
               onClick={() => setTab(item.value)}
               className={cn(
-                'relative px-4 py-2.5 text-sm font-semibold transition-colors',
+                'relative shrink-0 px-4 py-2.5 text-sm font-semibold transition-colors',
                 active ? 'text-orange-600' : 'text-stone-500 hover:text-stone-800',
               )}
             >
@@ -131,7 +131,7 @@ export default function AdminInquiriesPage() {
           {data.map((inquiry) => (
             <li
               key={inquiry.id}
-              className="rounded-xl border border-stone-200 bg-white p-5"
+              className="rounded-xl border border-stone-200 bg-white p-4 sm:p-5"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-semibold text-stone-600">

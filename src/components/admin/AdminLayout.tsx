@@ -10,12 +10,18 @@ const NAV_LINKS = [
   { to: '/admin/inquiries', label: '문의 관리', icon: MessageSquare },
 ]
 
-const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+const sideLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
     'flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold no-underline transition-colors',
-    isActive
-      ? 'bg-orange-50 text-orange-600'
-      : 'text-stone-600 hover:bg-stone-100',
+    isActive ? 'bg-orange-50 text-orange-600' : 'text-stone-600 hover:bg-stone-100',
+  )
+
+// 사이드바가 숨는 모바일에서는 상단 탭으로 같은 메뉴를 제공한다.
+// 예전에는 모바일에서 백오피스 내비게이션이 아예 없었다.
+const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    'flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold no-underline transition-colors',
+    isActive ? 'bg-orange-50 text-orange-600' : 'text-stone-600 hover:bg-stone-100',
   )
 
 export default function AdminLayout() {
@@ -31,7 +37,7 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-stone-50">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-stone-200 bg-white px-4 py-6 md:flex">
-        <div className="px-2 mb-8">
+        <div className="mb-8 px-2">
           <span className="text-lg font-extrabold tracking-tight text-orange-500">
             bookpool
           </span>
@@ -39,7 +45,7 @@ export default function AdminLayout() {
         </div>
         <nav className="flex flex-col gap-1">
           {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={navLinkClass}>
+            <NavLink key={to} to={to} className={sideLinkClass}>
               <Icon className="h-4 w-4" />
               {label}
             </NavLink>
@@ -48,26 +54,40 @@ export default function AdminLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-stone-200 bg-white px-6 py-3">
-          <span className="text-sm font-semibold text-stone-700 md:hidden">
-            bookpool 백오피스
-          </span>
-          <div className="ml-auto flex items-center gap-3">
-            <span className="text-sm text-stone-500">
-              {admin?.name ?? '관리자'}님
+        <header className="border-b border-stone-200 bg-white">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+            <span className="text-sm font-semibold text-stone-700 md:hidden">
+              bookpool 백오피스
             </span>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
-            >
-              <LogOut className="h-4 w-4" />
-              로그아웃
-            </button>
+            <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <span className="hidden text-sm text-stone-500 sm:inline">
+                {admin?.name ?? '관리자'}님
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">로그아웃</span>
+              </button>
+            </div>
           </div>
+
+          <nav
+            aria-label="백오피스 메뉴"
+            className="flex gap-1 overflow-x-auto scrollbar-none border-t border-stone-100 px-4 py-2 sm:px-6 md:hidden"
+          >
+            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+              <NavLink key={to} to={to} className={tabLinkClass}>
+                <Icon className="h-4 w-4" />
+                {label}
+              </NavLink>
+            ))}
+          </nav>
         </header>
 
-        <main className="flex-1 px-6 py-8">
+        <main className="flex-1 px-4 py-6 sm:px-6 sm:py-8">
           <div className="mx-auto max-w-4xl">
             <Outlet />
           </div>

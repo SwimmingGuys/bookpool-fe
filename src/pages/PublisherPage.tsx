@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Building2 } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import { Building2 } from 'lucide-react'
 import { useRecruitmentList, type RecruitmentQuery } from '@/lib/recruitmentsSource'
 import type { SortKey } from '@/lib/recruitmentFilter'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import Button from '@/components/ui/Button'
+import ButtonLink from '@/components/ui/ButtonLink'
+import PageContainer from '@/components/layout/PageContainer'
+import PageHeader from '@/components/layout/PageHeader'
 import { RecruitmentGridSkeleton } from '@/components/ui/Skeleton'
 import SortDropdown from '@/components/board/SortDropdown'
 import { usePageMeta } from '@/lib/useDocumentTitle'
@@ -39,39 +42,34 @@ export default function PublisherPage() {
 
   if (!publisher) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <h1 className="text-2xl font-bold text-stone-800">
+      <PageContainer width="narrow" className="py-16 text-center sm:py-24">
+        <h1 className="text-xl font-bold text-stone-800 sm:text-2xl">
           출판사를 찾을 수 없습니다
         </h1>
-        <Link
-          to="/board"
-          className="mt-6 inline-block rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-orange-600"
-        >
+        <ButtonLink to="/board" size="lg" className="mt-6">
           보드로 돌아가기
-        </Link>
-      </div>
+        </ButtonLink>
+      </PageContainer>
     )
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-10">
-      <Link
-        to="/board"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-stone-500 no-underline hover:text-stone-700"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        보드로 돌아가기
-      </Link>
-
-      <header className="mb-8 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-400">
-            <Building2 className="h-3.5 w-3.5" />
-            출판사
+    <PageContainer width="wide">
+      <PageHeader
+        backTo="/board"
+        backLabel="보드로 돌아가기"
+        title={
+          <span className="flex flex-col gap-1.5">
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-400">
+              <Building2 className="h-3.5 w-3.5" />
+              출판사
+            </span>
+            {publisher}
           </span>
-          <h1 className="mt-1.5 text-2xl font-bold text-stone-800">{publisher}</h1>
-          {list.status === 'success' && (
-            <p className="mt-2 text-sm text-stone-500">
+        }
+        description={
+          list.status === 'success' ? (
+            <>
               전체 {list.total}건
               {openCount > 0 && (
                 <>
@@ -81,12 +79,11 @@ export default function PublisherPage() {
                   </span>
                 </>
               )}
-            </p>
-          )}
-        </div>
-
-        <SortDropdown value={sort} onChange={setSort} />
-      </header>
+            </>
+          ) : undefined
+        }
+        actions={<SortDropdown value={sort} onChange={setSort} />}
+      />
 
       {list.status === 'loading' ? (
         <RecruitmentGridSkeleton />
@@ -124,6 +121,6 @@ export default function PublisherPage() {
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   )
 }

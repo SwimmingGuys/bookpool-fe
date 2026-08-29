@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react'
+import { Link, type LinkProps } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import {
   buttonBase,
@@ -8,20 +8,22 @@ import {
   type ButtonVariant,
 } from './buttonStyles'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonLinkProps extends LinkProps {
   variant?: ButtonVariant
   size?: ButtonSize
   fullWidth?: boolean
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', size = 'md', fullWidth, className, type = 'button', ...rest },
-  ref,
-) {
+// 버튼처럼 보이는 링크. 빈 상태·404 화면의 "돌아가기" 같은 이동 동작에 쓴다.
+export default function ButtonLink({
+  variant = 'primary',
+  size = 'md',
+  fullWidth,
+  className,
+  ...rest
+}: ButtonLinkProps) {
   return (
-    <button
-      ref={ref}
-      type={type}
+    <Link
       className={cn(
         buttonBase,
         fullWidth && 'w-full',
@@ -32,6 +34,4 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       {...rest}
     />
   )
-})
-
-export default Button
+}

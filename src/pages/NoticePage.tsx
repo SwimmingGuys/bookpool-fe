@@ -10,6 +10,8 @@ import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import Skeleton from '@/components/ui/Skeleton'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
+import PageContainer from '@/components/layout/PageContainer'
+import PageHeader from '@/components/layout/PageHeader'
 import { useNoticeReadState } from '@/lib/noticeReadState'
 import { useAsyncData } from '@/lib/useAsyncData'
 import { usePageMeta } from '@/lib/useDocumentTitle'
@@ -82,9 +84,19 @@ export default function NoticePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      <div className="flex flex-wrap items-center gap-2 mb-6">
-        <Chip selected={category === 'all'} onClick={() => setCategory('all')}>
+    <PageContainer width="narrow">
+      <PageHeader
+        title="공지사항"
+        description="서비스 업데이트와 정책·점검 안내를 확인하세요."
+      />
+
+      {/* 모바일에서는 칩이 넘치면 가로로 스크롤된다 */}
+      <div className="-mx-4 mb-6 flex gap-2 overflow-x-auto scrollbar-none px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+        <Chip
+          selected={category === 'all'}
+          onClick={() => setCategory('all')}
+          className="shrink-0"
+        >
           전체
         </Chip>
         {NOTICE_CATEGORY_OPTIONS.map((o) => (
@@ -92,6 +104,7 @@ export default function NoticePage() {
             key={o.value}
             selected={category === o.value}
             onClick={() => setCategory(o.value)}
+            className="shrink-0"
           >
             {o.label}
           </Chip>
@@ -136,7 +149,7 @@ export default function NoticePage() {
           )}
         </>
       )}
-    </div>
+    </PageContainer>
   )
 }
 
