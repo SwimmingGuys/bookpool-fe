@@ -97,5 +97,11 @@ export function useAuth() {
       requireAuth()
       await authApi.changePassword(payload)
     },
+    setEmailSubscription: async (subscribed: boolean) => {
+      requireAuth()
+      const updated = await authApi.setEmailSubscription(subscribed)
+      authStore.set((prev) => ({ ...prev, user: updated }))
+      return updated
+    },
   }
 }

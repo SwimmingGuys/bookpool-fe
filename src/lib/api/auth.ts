@@ -53,6 +53,7 @@ interface MemberDto {
   role?: string
   contact?: string | null
   createdAt?: string
+  emailSubscribed?: boolean | null
 }
 
 function toUser(dto: MemberDto): User {
@@ -63,6 +64,7 @@ function toUser(dto: MemberDto): User {
     role: dto.role,
     contact: dto.contact ?? undefined,
     createdAt: dto.createdAt,
+    emailSubscribed: dto.emailSubscribed ?? undefined,
   }
 }
 
@@ -185,6 +187,15 @@ export async function updateProfile(payload: UpdateProfilePayload): Promise<User
       nickname: payload.nickname.trim(),
       contact: contact === '' ? null : contact,
     },
+  })
+  return toUser(data)
+}
+
+// 이메일 수신 동의 토글. 가입 시 동의 여부를 나중에 바꿀 수 있어야 한다.
+export async function setEmailSubscription(subscribed: boolean): Promise<User> {
+  const data = await apiRequest<MemberDto>(ENDPOINTS.emailSubscription, {
+    method: 'PATCH',
+    body: { emailSubscribed: subscribed },
   })
   return toUser(data)
 }
