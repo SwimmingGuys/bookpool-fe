@@ -22,6 +22,10 @@ function setMetaTag(attr: 'property' | 'name', key: string, content: string) {
   tag.setAttribute('content', content)
 }
 
+function removeMetaTag(attr: 'property' | 'name', key: string) {
+  document.head.querySelector(`meta[${attr}="${key}"]`)?.remove()
+}
+
 function setCanonical(url: string) {
   let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
   if (!link) {
@@ -52,7 +56,6 @@ export function usePageMeta({ title, description, image, type = 'website' }: Pag
     const fullTitle = title ? `${title} · ${SITE_NAME}` : SITE_NAME
     const desc = description?.trim() || DEFAULT_DESCRIPTION
     const url = window.location.href
-    const ogImage = image || `${window.location.origin}/og-default.png`
 
     document.title = fullTitle
     setMetaTag('name', 'description', desc)
@@ -61,11 +64,20 @@ export function usePageMeta({ title, description, image, type = 'website' }: Pag
     setMetaTag('property', 'og:description', desc)
     setMetaTag('property', 'og:type', type)
     setMetaTag('property', 'og:url', url)
-    setMetaTag('property', 'og:image', ogImage)
     setMetaTag('name', 'twitter:card', 'summary_large_image')
     setMetaTag('name', 'twitter:title', fullTitle)
     setMetaTag('name', 'twitter:description', desc)
-    setMetaTag('name', 'twitter:image', ogImage)
+
+    // 실제 이미지가 있을 때만 og:image를 건다.
+    // 없는 기본 이미지를 가리키면 미리보기에 깨진 이미지가 뜬다.
+    if (image) {
+      setMetaTag('property', 'og:image', image)
+      setMetaTag('name', 'twitter:image', image)
+    } else {
+      removeMetaTag('property', 'og:image')
+      removeMetaTag('name', 'twitter:image')
+    }
+
     setCanonical(url)
   }, [title, description, image, type])
 }

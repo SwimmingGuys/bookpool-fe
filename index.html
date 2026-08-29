@@ -4,7 +4,35 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f97316" />
+
     <title>BookPool</title>
+    <meta
+      name="description"
+      content="서평단·베타리더 모집 공고를 한곳에서. 마감일 캘린더로 일정을 확인하고 관심 분야만 골라 보세요."
+    />
+
+    <!--
+      링크 공유용 기본 메타. 공고·공지 상세에서는 lib/useDocumentTitle.ts의
+      usePageMeta가 런타임에 덮어쓴다.
+
+      주의: CSR이라 자바스크립트를 실행하지 않는 크롤러는 아래 기본값만 읽는다.
+      개별 공고의 미리보기를 정확히 맞추려면 공고 상세 경로에 서버 사이드
+      메타 주입(프리렌더)이 필요하다.
+    -->
+    <meta property="og:site_name" content="BookPool" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="BookPool" />
+    <meta
+      property="og:description"
+      content="서평단·베타리더 모집 공고를 한곳에서. 마감일 캘린더로 일정을 확인하고 관심 분야만 골라 보세요."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BookPool" />
+    <meta
+      name="twitter:description"
+      content="서평단·베타리더 모집 공고를 한곳에서. 마감일 캘린더로 일정을 확인하고 관심 분야만 골라 보세요."
+    />
   </head>
   <body>
     <div id="root"></div>
