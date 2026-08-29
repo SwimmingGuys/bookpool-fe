@@ -3,6 +3,7 @@ import Layout from '@/components/layout/Layout'
 import HomePage from '@/pages/HomePage'
 import BoardPage from '@/pages/BoardPage'
 import RecruitmentDetailPage from '@/pages/RecruitmentDetailPage'
+import PublisherPage from '@/pages/PublisherPage'
 import NoticePage from '@/pages/NoticePage'
 import NoticeDetailPage from '@/pages/NoticeDetailPage'
 import SupportPage from '@/pages/SupportPage'
@@ -54,6 +55,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/recruitments/:id" element={<RecruitmentDetailPage />} />
+          <Route path="/publishers/:name" element={<PublisherPage />} />
           <Route path="/notice" element={<NoticePage />} />
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
           <Route

@@ -101,7 +101,13 @@ export default function RecruitmentDetailPage() {
         </div>
 
         <p className="mt-3 text-sm text-stone-500">
-          {recruitment.publisher} · {recruitment.category}
+          <Link
+            to={`/publishers/${encodeURIComponent(recruitment.publisher)}`}
+            className="font-medium text-stone-600 no-underline hover:text-orange-600"
+          >
+            {recruitment.publisher}
+          </Link>{' '}
+          · {recruitment.category}
         </p>
       </header>
 

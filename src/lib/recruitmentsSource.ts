@@ -16,6 +16,8 @@ export interface RecruitmentQuery {
   categories: string[]
   types: RecruitmentType[]
   withinDays?: number
+  // 출판사 페이지처럼 한 출판사로 고정해 볼 때 쓴다.
+  publisher?: string
   sort: CampaignSortKey
 }
 
@@ -44,6 +46,7 @@ export function useRecruitmentList(
     () =>
       listCampaigns({
         query: params.query || undefined,
+        publisher: params.publisher,
         categories: params.categories.length > 0 ? params.categories : undefined,
         types: params.types.length > 0 ? params.types : undefined,
         withinDays: params.withinDays,
@@ -54,6 +57,7 @@ export function useRecruitmentList(
     { content: EMPTY, page: 0, size, totalElements: 0, totalPages: 0, hasNext: false },
     [
       params.query,
+      params.publisher,
       params.categories,
       params.types,
       params.withinDays,
@@ -72,6 +76,7 @@ export function useRecruitmentList(
   // 필터가 바뀌면 이어붙인 페이지를 버린다. effect 대신 렌더 중 이전 값과 비교한다.
   const resetKey = JSON.stringify([
     params.query,
+    params.publisher,
     params.categories,
     params.types,
     params.withinDays,
@@ -110,6 +115,7 @@ export function useRecruitmentList(
     setIsLoadingMore(true)
     listCampaigns({
       query: current.query || undefined,
+      publisher: current.publisher,
       categories: current.categories.length > 0 ? current.categories : undefined,
       types: current.types.length > 0 ? current.types : undefined,
       withinDays: current.withinDays,
@@ -167,6 +173,7 @@ export function useRecruitmentCalendar(
     () =>
       listCampaigns({
         query: params.query || undefined,
+        publisher: params.publisher,
         categories: params.categories.length > 0 ? params.categories : undefined,
         types: params.types.length > 0 ? params.types : undefined,
         withinDays: params.withinDays,

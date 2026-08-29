@@ -71,6 +71,7 @@ const SORT_TO_API: Record<CampaignSortKey, string> = {
 
 export interface CampaignSearchParams {
   query?: string
+  publisher?: string
   categories?: readonly string[]
   types?: readonly RecruitmentType[]
   // 마감까지 남은 일수 상한. 보드의 '이번 주(7)'·'마감 임박(3)' 필터에 대응한다.
@@ -252,6 +253,7 @@ export async function listCampaigns(
     auth: false,
     query: {
       query: params.query,
+      publisher: params.publisher,
       categories: params.categories,
       types: params.types?.map((t) => TYPE_TO_API[t]),
       withinDays: params.withinDays,
