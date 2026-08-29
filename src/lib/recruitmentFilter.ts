@@ -48,15 +48,6 @@ export function deadlineToWithinDays(deadline: DeadlineFilter): number | undefin
   }
 }
 
-export function hasActiveFilter(filter: RecruitmentFilter): boolean {
-  return (
-    filter.query.length > 0 ||
-    filter.categories.length > 0 ||
-    filter.types.length > 0 ||
-    filter.deadline !== 'all'
-  )
-}
-
 /**
  * 클라이언트 필터. 목록 필터링은 서버가 하지만, 즐겨찾기 전용 보기처럼
  * 이미 전부 받아둔 유한한 목록에는 이 함수를 쓴다.

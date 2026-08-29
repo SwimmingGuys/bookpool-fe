@@ -77,15 +77,6 @@ export interface PageResponse<T> {
   hasNext: boolean
 }
 
-export const EMPTY_PAGE: PageResponse<never> = {
-  content: [],
-  page: 0,
-  size: 0,
-  totalElements: 0,
-  totalPages: 0,
-  hasNext: false,
-}
-
 // 백엔드 에러 코드 → 프론트 ApiErrorCode 매핑. 명세 추가 시 여기에 항목을 늘린다.
 const SERVER_CODE_MAP: Record<string, ApiErrorCode> = {
   M001: 'EMAIL_EXISTS', // 이미 사용 중인 이메일 (회원가입)
