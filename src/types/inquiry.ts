@@ -26,4 +26,7 @@ export interface Inquiry {
   createdAt: string
   answer?: string
   answeredAt?: string
+  // 관리자 목록에서만 채워진다. 사용자 화면에서는 undefined.
+  authorEmail?: string
+  authorNickname?: string
 }

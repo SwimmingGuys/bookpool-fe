@@ -1,27 +1,51 @@
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Pin } from 'lucide-react'
-import { getNoticeById } from '@/data/mockNotices'
+import { getNotice } from '@/lib/api/notices'
+import type { Notice } from '@/types/notice'
 import { formatFullDate } from '@/lib/date'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
+import Skeleton from '@/components/ui/Skeleton'
+import ErrorState from '@/components/ui/ErrorState'
 import { useNoticeReadState } from '@/lib/noticeReadState'
-import { useDocumentTitle } from '@/lib/useDocumentTitle'
+import { useAsyncData } from '@/lib/useAsyncData'
+import { isNotFound } from '@/lib/api/errors'
+import { usePageMeta } from '@/lib/useDocumentTitle'
 
 export default function NoticeDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const notice = id ? getNoticeById(id) : undefined
   const { markAsRead } = useNoticeReadState()
 
-  useDocumentTitle(notice ? notice.title : '공지사항')
+  const { data: notice, status, error, reload } = useAsyncData<Notice | null>(
+    () => (id ? getNotice(id) : Promise.resolve(null)),
+    null,
+    [id],
+  )
+
+  usePageMeta({
+    title: notice ? notice.title : '공지사항',
+    description: notice?.content.slice(0, 120),
+    type: 'article',
+  })
 
   // 로그인 상태에서 공지를 열면 읽음으로 표시한다.
   useEffect(() => {
     if (notice) markAsRead(notice.id)
   }, [notice, markAsRead])
 
-  if (!notice) {
-    return <NotFound />
+  if (status === 'loading') return <DetailSkeleton />
+
+  if (status === 'error') {
+    return isNotFound(error) ? (
+      <NotFound />
+    ) : (
+      <div className="mx-auto max-w-2xl px-6 py-20">
+        <ErrorState title="공지를 불러오지 못했습니다." onRetry={reload} />
+      </div>
+    )
   }
+
+  if (!notice) return <NotFound />
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
@@ -64,6 +88,19 @@ export default function NoticeDetailPage() {
           목록으로 돌아가기
         </Link>
       </div>
+    </div>
+  )
+}
+
+function DetailSkeleton() {
+  return (
+    <div className="mx-auto max-w-3xl px-6 py-10">
+      <Skeleton className="h-4 w-28" />
+      <Skeleton className="mt-6 h-5 w-20 rounded-full" />
+      <Skeleton className="mt-3 h-8 w-3/4" />
+      <Skeleton className="mt-8 h-4 w-full" />
+      <Skeleton className="mt-2 h-4 w-full" />
+      <Skeleton className="mt-2 h-4 w-2/3" />
     </div>
   )
 }

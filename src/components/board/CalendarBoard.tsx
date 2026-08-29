@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useMemo } from 'react'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Recruitment } from '@/types/recruitment'
 import {
@@ -16,6 +16,11 @@ interface CalendarBoardProps {
   onSelectDate: (date: string | null) => void
   dateBasis: DateBasis
   onChangeDateBasis: (basis: DateBasis) => void
+  // 보고 있는 달. 그 달의 공고만 서버에서 받아오므로 부모가 소유한다.
+  year: number
+  monthIndex: number
+  onChangeMonth: (year: number, monthIndex: number) => void
+  loading?: boolean
   toolbar?: React.ReactNode
 }
 
@@ -27,11 +32,13 @@ export default function CalendarBoard({
   onSelectDate,
   dateBasis,
   onChangeDateBasis,
+  year,
+  monthIndex,
+  onChangeMonth,
+  loading,
   toolbar,
 }: CalendarBoardProps) {
-  const [cursor, setCursor] = useState(
-    () => new Date(TODAY_DATE.getFullYear(), TODAY_DATE.getMonth(), 1),
-  )
+  const cursor = useMemo(() => new Date(year, monthIndex, 1), [year, monthIndex])
 
   const deadlineMap = useMemo(() => {
     const map = new Map<string, Recruitment[]>()
@@ -46,10 +53,15 @@ export default function CalendarBoard({
 
   const monthMatrix = useMemo(() => buildMonthMatrix(cursor), [cursor])
 
-  const goPrev = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))
-  const goNext = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
+  const shiftMonth = (delta: number) => {
+    const next = new Date(year, monthIndex + delta, 1)
+    onChangeMonth(next.getFullYear(), next.getMonth())
+  }
+
+  const goPrev = () => shiftMonth(-1)
+  const goNext = () => shiftMonth(1)
   const goToday = () =>
-    setCursor(new Date(TODAY_DATE.getFullYear(), TODAY_DATE.getMonth(), 1))
+    onChangeMonth(TODAY_DATE.getFullYear(), TODAY_DATE.getMonth())
 
   return (
     <div className="rounded-2xl border border-stone-200 bg-white overflow-hidden">
@@ -58,7 +70,7 @@ export default function CalendarBoard({
           <MonthYearPicker
             year={cursor.getFullYear()}
             month={cursor.getMonth()}
-            onChange={(y, m) => setCursor(new Date(y, m, 1))}
+            onChange={onChangeMonth}
           />
           <div className="flex items-center">
             <button
@@ -84,6 +96,12 @@ export default function CalendarBoard({
             >
               오늘
             </button>
+            {loading && (
+              <Loader2
+                aria-label="공고를 불러오는 중"
+                className="ml-1 h-4 w-4 animate-spin text-stone-400"
+              />
+            )}
           </div>
         </div>
 

@@ -77,7 +77,7 @@ export default function EmailVerificationFields({
       setCode('')
       setCodeError(undefined)
       setCodeSent(true)
-      showToast('인증번호를 이메일로 발송했습니다.', 'success')
+      showToast('인증번호를 발송했습니다. 메일함을 확인해주세요.', 'info')
     } catch (e) {
       if (e instanceof AuthError) setEmailError(e.message)
       else setEmailError('인증번호 발송에 실패했습니다.')

@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Code, Briefcase, Palette, Heart, Globe, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import Section from '@/components/ui/Section'
 import StaggerChildren from '@/components/ui/StaggerChildren'
-import { mockRecruitments } from '@/data/mockRecruitments'
+import { listCategoryCounts } from '@/lib/api/campaigns'
+import { useAsyncData } from '@/lib/useAsyncData'
 
 const categories = [
   { icon: Code, label: 'IT/개발', color: 'from-stone-600 to-stone-700' },
@@ -18,15 +19,9 @@ const categories = [
 export default function CategorySection() {
   const [selected, setSelected] = useState<string | null>(null)
   const navigate = useNavigate()
-
-  const countsByCategory = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const r of mockRecruitments) {
-      if (r.status !== 'open') continue
-      map.set(r.category, (map.get(r.category) ?? 0) + 1)
-    }
-    return map
-  }, [])
+  // 카테고리별 모집중 건수는 집계 엔드포인트로 받는다.
+  // 실패하면 건수만 감추고 타일 자체는 그대로 동작한다.
+  const counts = useAsyncData<Record<string, number>>(listCategoryCounts, {}, [])
 
   const handleClick = (label: string) => {
     setSelected(selected === label ? null : label)
@@ -47,7 +42,7 @@ export default function CategorySection() {
         className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto"
       >
         {categories.map((cat) => {
-          const count = countsByCategory.get(cat.label) ?? 0
+          const count = counts.data[cat.label] ?? 0
           return (
             <button
               key={cat.label}
@@ -73,7 +68,9 @@ export default function CategorySection() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-stone-700">{cat.label}</p>
-                <p className="text-xs text-stone-400 mt-0.5">{count}건 모집중</p>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  {counts.status === 'success' ? `${count}건 모집중` : '\u00a0'}
+                </p>
               </div>
             </button>
           )

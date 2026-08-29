@@ -1,4 +1,5 @@
 import type { Recruitment, RecruitmentType } from '@/types/recruitment'
+import type { CampaignSortKey } from '@/lib/api/campaigns'
 
 export type DeadlineFilter = 'all' | 'week' | 'imminent'
 
@@ -34,42 +35,40 @@ export function validateQuery(raw: string): QueryValidation {
   return { ok: true, query: trimmed }
 }
 
-export function filterRecruitments(
-  recruitments: Recruitment[],
-  filter: RecruitmentFilter,
-): Recruitment[] {
-  const q = filter.query.trim().toLowerCase()
-
-  return recruitments.filter((r) => {
-    if (q.length > 0) {
-      const haystack = [r.title, r.bookTitle, r.publisher, r.category]
-        .join(' ')
-        .toLowerCase()
-      if (!haystack.includes(q)) return false
-    }
-
-    if (filter.categories.length > 0 && !filter.categories.includes(r.category)) {
-      return false
-    }
-
-    if (filter.types.length > 0 && !filter.types.includes(r.badgeLabel)) {
-      return false
-    }
-
-    if (filter.deadline === 'week' && r.daysRemaining > 7) return false
-    if (filter.deadline === 'imminent' && r.daysRemaining > 3) return false
-
-    return true
-  })
+// 마감 조건 → 서버에 넘길 '남은 일수 상한'.
+// 필터링 자체는 서버가 하므로 프론트는 값만 변환한다.
+export function deadlineToWithinDays(deadline: DeadlineFilter): number | undefined {
+  switch (deadline) {
+    case 'week':
+      return 7
+    case 'imminent':
+      return 3
+    case 'all':
+      return undefined
+  }
 }
 
-export type SortKey = 'deadline' | 'popular'
+export function hasActiveFilter(filter: RecruitmentFilter): boolean {
+  return (
+    filter.query.length > 0 ||
+    filter.categories.length > 0 ||
+    filter.types.length > 0 ||
+    filter.deadline !== 'all'
+  )
+}
+
+export type SortKey = CampaignSortKey
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'deadline', label: '마감 임박순' },
   { value: 'popular', label: '조회순' },
+  { value: 'latest', label: '최신 등록순' },
 ]
 
+/**
+ * 클라이언트 정렬. 목록은 서버가 정렬해 내려주지만, 캘린더에서 특정 날짜를 골랐을 때는
+ * 이미 받아둔 그 달의 공고를 다시 정렬해 보여주므로 이 함수를 쓴다.
+ */
 export function sortRecruitments(
   recruitments: Recruitment[],
   sort: SortKey,
@@ -80,5 +79,9 @@ export function sortRecruitments(
       return list.sort((a, b) => a.daysRemaining - b.daysRemaining)
     case 'popular':
       return list.sort((a, b) => b.viewCount - a.viewCount)
+    case 'latest':
+      return list.sort((a, b) =>
+        b.recruitStartDate.localeCompare(a.recruitStartDate),
+      )
   }
 }
