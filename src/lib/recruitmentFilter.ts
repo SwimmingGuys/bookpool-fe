@@ -57,6 +57,35 @@ export function hasActiveFilter(filter: RecruitmentFilter): boolean {
   )
 }
 
+/**
+ * 클라이언트 필터. 목록 필터링은 서버가 하지만, 즐겨찾기 전용 보기처럼
+ * 이미 전부 받아둔 유한한 목록에는 이 함수를 쓴다.
+ */
+export function filterRecruitments(
+  recruitments: readonly Recruitment[],
+  filter: RecruitmentFilter,
+): Recruitment[] {
+  const q = filter.query.trim().toLowerCase()
+  const withinDays = deadlineToWithinDays(filter.deadline)
+
+  return recruitments.filter((r) => {
+    if (q.length > 0) {
+      const haystack = [r.title, r.bookTitle, r.publisher, r.category]
+        .join(' ')
+        .toLowerCase()
+      if (!haystack.includes(q)) return false
+    }
+    if (filter.categories.length > 0 && !filter.categories.includes(r.category)) {
+      return false
+    }
+    if (filter.types.length > 0 && !filter.types.includes(r.badgeLabel)) {
+      return false
+    }
+    if (withinDays !== undefined && r.daysRemaining > withinDays) return false
+    return true
+  })
+}
+
 export type SortKey = CampaignSortKey
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [

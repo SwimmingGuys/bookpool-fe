@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { CalendarCheck } from 'lucide-react'
+import { CalendarCheck, Star } from 'lucide-react'
+import { cn } from '@/lib/cn'
 import {
   useRecruitmentCalendar,
   useRecruitmentList,
+  useRecruitmentsByLoader,
   type RecruitmentQuery,
 } from '@/lib/recruitmentsSource'
+import { listBookmarkedCampaigns } from '@/lib/api/campaigns'
+import { useAuth } from '@/lib/auth'
 import FilterPanel from '@/components/board/FilterPanel'
 import CalendarBoard from '@/components/board/CalendarBoard'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
@@ -19,6 +23,7 @@ import { RecruitmentGridSkeleton } from '@/components/ui/Skeleton'
 import {
   deadlineToWithinDays,
   emptyFilter,
+  filterRecruitments,
   sortRecruitments,
   MAX_QUERY_LENGTH,
   type RecruitmentFilter,
@@ -36,6 +41,7 @@ export default function BoardPage() {
   })
 
   const [searchParams, setSearchParams] = useSearchParams()
+  const { isLoggedIn } = useAuth()
   const initialQuery = (searchParams.get('q') ?? '').slice(0, MAX_QUERY_LENGTH)
 
   const [filter, setFilter] = useState<RecruitmentFilter>({
@@ -49,6 +55,9 @@ export default function BoardPage() {
     year: TODAY_DATE.getFullYear(),
     index: TODAY_DATE.getMonth(),
   }))
+  // 즐겨찾기 전용 보기. 즐겨찾기는 개인의 유한한 목록이라 통째로 받아
+  // 캘린더와 목록을 같은 데이터로 그린다.
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
 
   // URL의 q 파라미터가 바뀌면(예: 헤더 검색·뒤로가기) 필터에 반영한다.
   // effect 대신 렌더 중 이전 값과 비교해 동기화한다.
@@ -77,20 +86,41 @@ export default function BoardPage() {
   // 캘린더는 점을 찍으려면 그 달 전체가 필요하므로 목록과 따로 받아온다.
   const calendar = useRecruitmentCalendar(month.year, month.index, dateBasis, listQuery)
 
+  const favorites = useRecruitmentsByLoader(
+    () => (favoritesOnly ? listBookmarkedCampaigns() : Promise.resolve([])),
+    [favoritesOnly],
+  )
+
+  // 즐겨찾기 보기에서는 서버에 다시 묻지 않고 받아둔 목록을 걸러 쓴다.
+  const favoriteMatches = useMemo(
+    () =>
+      favoritesOnly
+        ? sortRecruitments(filterRecruitments(favorites.recruitments, filter), sort)
+        : null,
+    [favoritesOnly, favorites.recruitments, filter, sort],
+  )
+
+  const calendarItems = favoriteMatches ?? calendar.recruitments
+  const calendarLoading = favoritesOnly
+    ? favorites.status === 'loading'
+    : calendar.status === 'loading'
+
   // 날짜를 고르면 이미 받아둔 그 달의 공고에서 추린다(추가 요청 없음).
   const dateFiltered = useMemo(() => {
     if (!selectedDate) return null
-    const matched = calendar.recruitments.filter(
+    const matched = calendarItems.filter(
       (r) => getDateByBasis(r, dateBasis) === selectedDate,
     )
     return sortRecruitments(matched, sort)
-  }, [calendar.recruitments, selectedDate, dateBasis, sort])
+  }, [calendarItems, selectedDate, dateBasis, sort])
 
-  const visible = dateFiltered ?? list.recruitments
-  const visibleCount = dateFiltered ? dateFiltered.length : list.total
-  const isLoading = dateFiltered
-    ? calendar.status === 'loading'
-    : list.status === 'loading'
+  // 목록에 뿌릴 것: 날짜 선택 > 즐겨찾기 보기 > 서버 페이지네이션 목록
+  const visible = dateFiltered ?? favoriteMatches ?? list.recruitments
+  const visibleCount = visible === list.recruitments ? list.total : visible.length
+  const isLoading =
+    dateFiltered || favoriteMatches ? calendarLoading : list.status === 'loading'
+  // '더 보기'는 서버 페이지네이션 목록일 때만 의미가 있다.
+  const canLoadMore = !dateFiltered && !favoriteMatches && list.hasNext
 
   const handleChangeDateBasis = (next: DateBasis) => {
     setDateBasis(next)
@@ -99,6 +129,11 @@ export default function BoardPage() {
 
   const handleChangeMonth = (year: number, index: number) => {
     setMonth({ year, index })
+    setSelectedDate(null)
+  }
+
+  const handleToggleFavoritesOnly = () => {
+    setFavoritesOnly((prev) => !prev)
     setSelectedDate(null)
   }
 
@@ -121,6 +156,23 @@ export default function BoardPage() {
       <div className="mt-0.5 hidden h-9 w-px bg-stone-200 sm:block" />
 
       <FilterPanel filter={filter} onChange={setFilter} />
+
+      {isLoggedIn && (
+        <button
+          type="button"
+          onClick={handleToggleFavoritesOnly}
+          aria-pressed={favoritesOnly}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
+            favoritesOnly
+              ? 'border-amber-300 bg-amber-50 text-amber-700'
+              : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50',
+          )}
+        >
+          <Star className={cn('h-3.5 w-3.5', favoritesOnly && 'fill-amber-400')} />
+          즐겨찾기만
+        </button>
+      )}
     </div>
   )
 
@@ -129,7 +181,7 @@ export default function BoardPage() {
       <div className="mx-auto max-w-7xl px-6 py-10">
         <div className="mb-10">
           <CalendarBoard
-            recruitments={calendar.recruitments}
+            recruitments={calendarItems}
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
             dateBasis={dateBasis}
@@ -137,7 +189,7 @@ export default function BoardPage() {
             year={month.year}
             monthIndex={month.index}
             onChangeMonth={handleChangeMonth}
-            loading={calendar.status === 'loading'}
+            loading={calendarLoading}
             toolbar={toolbar}
           />
         </div>
@@ -184,7 +236,7 @@ export default function BoardPage() {
 
           {isLoading ? (
             <RecruitmentGridSkeleton />
-          ) : !dateFiltered && list.status === 'error' ? (
+          ) : !dateFiltered && !favoriteMatches && list.status === 'error' ? (
             <ErrorState
               title="공고를 불러오지 못했습니다."
               description="네트워크 상태를 확인한 뒤 다시 시도해 주세요."
@@ -195,6 +247,7 @@ export default function BoardPage() {
               query={filter.query}
               selectedDate={selectedDate}
               dateBasis={dateBasis}
+              favoritesOnly={favoritesOnly}
             />
           ) : (
             <>
@@ -204,8 +257,8 @@ export default function BoardPage() {
                 ))}
               </div>
 
-              {/* 날짜를 고른 경우엔 그 달 전체를 이미 받아둔 상태라 더 보기가 없다. */}
-              {!dateFiltered && list.hasNext && (
+              {/* 날짜 선택·즐겨찾기 보기는 이미 전부 받아둔 상태라 더 보기가 없다. */}
+              {canLoadMore && (
                 <div className="mt-6 flex justify-center">
                   <Button
                     variant="secondary"
@@ -230,14 +283,18 @@ function BoardEmpty({
   query,
   selectedDate,
   dateBasis,
+  favoritesOnly,
 }: {
   query: string
   selectedDate: string | null
   dateBasis: DateBasis
+  favoritesOnly: boolean
 }) {
   let title = '조건에 맞는 공고가 없습니다.'
   if (selectedDate) {
     title = `${selectedDate}이(가) ${getDateBasisLabel(dateBasis)}인 공고가 없습니다.`
+  } else if (favoritesOnly) {
+    title = '즐겨찾기한 공고가 없습니다.'
   } else if (query) {
     title = `"${query}"에 대한 검색 결과가 없습니다.`
   }

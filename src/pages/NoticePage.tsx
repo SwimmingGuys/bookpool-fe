@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Megaphone, Pin } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -7,18 +7,25 @@ import { listNotices } from '@/lib/api/notices'
 import { formatFullDate } from '@/lib/date'
 import Chip from '@/components/ui/Chip'
 import EmptyState from '@/components/ui/EmptyState'
+import ErrorState from '@/components/ui/ErrorState'
+import Skeleton from '@/components/ui/Skeleton'
 import NoticeCategoryBadge from '@/components/notice/NoticeCategoryBadge'
 import { useNoticeReadState } from '@/lib/noticeReadState'
-import { useDocumentTitle } from '@/lib/useDocumentTitle'
+import { useAsyncData } from '@/lib/useAsyncData'
+import { usePageMeta } from '@/lib/useDocumentTitle'
 
 const PAGE_SIZE = 10
+
+const EMPTY: Notice[] = []
 
 type CategoryFilter = NoticeCategory | 'all'
 
 export default function NoticePage() {
-  useDocumentTitle('공지사항')
+  usePageMeta({
+    title: '공지사항',
+    description: 'BookPool의 업데이트·정책·점검 안내를 확인하세요.',
+  })
   const [searchParams, setSearchParams] = useSearchParams()
-  const [notices, setNotices] = useState<Notice[]>([])
 
   const categoryParam = searchParams.get('category')
   const category: CategoryFilter = NOTICE_CATEGORY_OPTIONS.some(
@@ -27,31 +34,25 @@ export default function NoticePage() {
     ? (categoryParam as NoticeCategory)
     : 'all'
 
-  useEffect(() => {
-    let ignore = false
-    listNotices({ size: 100 })
-      .then((page) => {
-        if (!ignore) {
-          setNotices(
-            [...page.content].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-          )
-        }
-      })
-      .catch(() => {
-        if (!ignore) setNotices([])
-      })
-    return () => {
-      ignore = true
-    }
-  }, [])
-
-  const filtered = useMemo(
+  // 카테고리 필터는 서버에 넘긴다. 전체를 받아 클라이언트에서 거르면
+  // 공지가 쌓일수록 뒤쪽이 잘려나간다.
+  const {
+    data: filtered,
+    status,
+    error,
+    reload,
+  } = useAsyncData<Notice[]>(
     () =>
-      category === 'all'
-        ? notices
-        : notices.filter((n) => n.category === category),
-    [category, notices],
+      listNotices({
+        category: category === 'all' ? undefined : category,
+        size: 100,
+      }).then((page) =>
+        [...page.content].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+      ),
+    EMPTY,
+    [category],
   )
+
   const pinned = useMemo(() => filtered.filter((n) => n.isPinned), [filtered])
   const normal = useMemo(() => filtered.filter((n) => !n.isPinned), [filtered])
 
@@ -97,7 +98,19 @@ export default function NoticePage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {status === 'loading' ? (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full rounded-xl" />
+          ))}
+        </div>
+      ) : status === 'error' ? (
+        <ErrorState
+          title="공지를 불러오지 못했습니다."
+          description={error?.message}
+          onRetry={reload}
+        />
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={Megaphone}
           title="해당하는 공지가 없어요."
