@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, Pencil } from 'lucide-react'
+import { Bell, Mail, Pencil } from 'lucide-react'
 import {
-  CATEGORIES,
+  categoryLabel,
+  CATEGORY_OPTIONS,
   RECRUITMENT_TYPE_LABELS,
   RECRUITMENT_TYPE_OPTIONS,
+  type Category,
   type RecruitmentType,
 } from '@/types/recruitment'
 import { listPublishers } from '@/lib/api/campaigns'
@@ -13,6 +15,7 @@ import {
   type NotificationSubscription,
 } from '@/lib/notifications'
 import { useAuth } from '@/lib/auth'
+import { AuthError } from '@/lib/api/errors'
 import { showToast } from '@/lib/toast'
 import Button from '@/components/ui/Button'
 import Chip from '@/components/ui/Chip'
@@ -33,8 +36,9 @@ const countBadge = (count: number) =>
 
 export default function NotificationSettingsPage() {
   useDocumentTitle('알림 설정')
-  const { user } = useAuth()
+  const { user, setEmailSubscription } = useAuth()
   const { subscription: saved, save } = useNotificationSubscriptions()
+  const [savingEmail, setSavingEmail] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState<NotificationSubscription>(saved)
@@ -76,16 +80,40 @@ export default function NotificationSettingsPage() {
     setIsEditing(false)
     setPublisherQuery('')
   }
-  const handleSave = () => {
-    save(draft)
-    setIsEditing(false)
-    setPublisherQuery('')
-    showToast('알림 설정이 저장되었습니다.', 'success')
+  // 저장 실패 시 토스트는 스토어가 띄우고 값도 되돌려주므로, 여기서는 성공했을 때만
+  // 편집 모드를 빠져나간다.
+  const handleSave = async () => {
+    try {
+      await save(draft)
+      setIsEditing(false)
+      setPublisherQuery('')
+      showToast('알림 설정이 저장되었습니다.', 'success')
+    } catch {
+      // 스토어에서 이미 안내했다.
+    }
+  }
+
+  const handleToggleEmail = async (next: boolean) => {
+    setSavingEmail(true)
+    try {
+      await setEmailSubscription(next)
+      showToast(
+        next ? '이메일 수신을 켰습니다.' : '이메일 수신을 껐습니다.',
+        'success',
+      )
+    } catch (err) {
+      showToast(
+        err instanceof AuthError ? err.message : '설정 저장에 실패했습니다.',
+        'error',
+      )
+    } finally {
+      setSavingEmail(false)
+    }
   }
 
   const handleToggleType = (type: RecruitmentType) =>
     setDraft((p) => ({ ...p, types: toggleInArray(p.types, type) }))
-  const handleToggleCategory = (cat: string) =>
+  const handleToggleCategory = (cat: Category) =>
     setDraft((p) => ({ ...p, categories: toggleInArray(p.categories, cat) }))
   const handleTogglePublisher = (pub: string) =>
     setDraft((p) => ({ ...p, publishers: toggleInArray(p.publishers, pub) }))
@@ -103,6 +131,23 @@ export default function NotificationSettingsPage() {
       />
 
       <div className="flex flex-col gap-6 mt-6">
+        <SectionCard
+          title="이메일 수신"
+          description="앱 알림과 별개로, 조건에 맞는 공고를 메일로도 받을지 정합니다."
+        >
+          <label className="flex items-center gap-2.5 text-sm text-stone-600">
+            <input
+              type="checkbox"
+              checked={user.emailSubscribed ?? false}
+              onChange={(e) => handleToggleEmail(e.target.checked)}
+              disabled={savingEmail}
+              className="h-4 w-4 rounded border-stone-300 accent-orange-500"
+            />
+            <Mail className="h-4 w-4 text-stone-400" />
+            모집 소식 이메일 받기
+          </label>
+        </SectionCard>
+
         <SectionCard
           title="공고 종류"
           description={isEditing ? '관심 있는 공고 종류를 선택하세요.' : undefined}
@@ -134,18 +179,18 @@ export default function NotificationSettingsPage() {
         >
           {isEditing ? (
             <ChipRow>
-              {CATEGORIES.map((cat) => (
+              {CATEGORY_OPTIONS.map((opt) => (
                 <Chip
-                  key={cat}
-                  selected={draft.categories.includes(cat)}
-                  onClick={() => handleToggleCategory(cat)}
+                  key={opt.value}
+                  selected={draft.categories.includes(opt.value)}
+                  onClick={() => handleToggleCategory(opt.value)}
                 >
-                  {cat}
+                  {opt.label}
                 </Chip>
               ))}
             </ChipRow>
           ) : (
-            <SelectedPills items={[...saved.categories]} />
+            <SelectedPills items={saved.categories.map(categoryLabel)} />
           )}
         </SectionCard>
 

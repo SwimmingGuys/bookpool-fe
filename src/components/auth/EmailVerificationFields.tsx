@@ -5,7 +5,6 @@ import {
   AuthError,
   sendVerificationCode,
   verifyCode,
-  verifyResetCode,
   type VerificationIntent,
 } from '@/lib/api/auth'
 import {
@@ -96,8 +95,7 @@ export default function EmailVerificationFields({
     setCodeError(undefined)
     setVerifyingCode(true)
     try {
-      if (intent === 'reset') await verifyResetCode(email, code)
-      else await verifyCode(email, code)
+      await verifyCode(email, code, { intent })
       setIsVerified(true)
       showToast('이메일이 인증되었습니다.', 'success')
     } catch (e) {

@@ -1,37 +1,46 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Code, Briefcase, Palette, Heart, Globe, BookOpen } from 'lucide-react'
+import {
+  Code,
+  Briefcase,
+  Palette,
+  Heart,
+  Globe,
+  BookOpen,
+  type LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/cn'
 import Section from '@/components/ui/Section'
 import StaggerChildren from '@/components/ui/StaggerChildren'
-import { useAllRecruitments } from '@/lib/recruitmentsSource'
+import { listCategoryCounts } from '@/lib/api/campaigns'
+import { CATEGORY_LABELS, type Category } from '@/types/recruitment'
+import { useAsyncData } from '@/lib/useAsyncData'
 
-const categories = [
-  { icon: Code, label: 'IT/개발', color: 'from-stone-600 to-stone-700' },
-  { icon: Briefcase, label: '경제', color: 'from-stone-500 to-stone-600' },
-  { icon: Palette, label: '기획/디자인', color: 'from-orange-500 to-orange-600' },
-  { icon: Heart, label: '자기계발', color: 'from-stone-600 to-stone-700' },
-  { icon: Globe, label: '인문/사회', color: 'from-stone-500 to-stone-600' },
-  { icon: BookOpen, label: '소설', color: 'from-orange-500 to-orange-600' },
+// 값은 백엔드 CampaignCategory와 1:1이다. 홈에는 그중 대표 6종만 타일로 보여준다.
+const categories: { icon: LucideIcon; value: Category; color: string }[] = [
+  { icon: Code, value: 'IT', color: 'from-stone-600 to-stone-700' },
+  { icon: BookOpen, value: 'NOVEL', color: 'from-orange-500 to-orange-600' },
+  { icon: Briefcase, value: 'ECONOMY', color: 'from-stone-500 to-stone-600' },
+  { icon: Heart, value: 'SELF_DEVELOPMENT', color: 'from-stone-600 to-stone-700' },
+  { icon: Globe, value: 'HUMANITY', color: 'from-stone-500 to-stone-600' },
+  { icon: Palette, value: 'ART_DESIGN', color: 'from-orange-500 to-orange-600' },
 ]
 
 export default function CategorySection() {
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Category | null>(null)
   const navigate = useNavigate()
-  const allRecruitments = useAllRecruitments()
+  // 카테고리별 건수. 실패하면 건수만 감추고 타일 자체는 그대로 동작한다.
+  const counts = useAsyncData<Record<string, number>>(
+    listCategoryCounts,
+    {},
+    [],
+  )
 
-  const countsByCategory = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const r of allRecruitments) {
-      if (r.status !== 'open') continue
-      map.set(r.category, (map.get(r.category) ?? 0) + 1)
-    }
-    return map
-  }, [allRecruitments])
-
-  const handleClick = (label: string) => {
-    setSelected(selected === label ? null : label)
-    navigate(`/board?q=${encodeURIComponent(label)}`)
+  // 검색어가 아니라 카테고리 필터로 보드를 연다. 예전엔 라벨을 q에 실어 보내
+  // '경제'가 제목에 든 다른 분야 공고까지 딸려왔다.
+  const handleClick = (value: Category) => {
+    setSelected(selected === value ? null : value)
+    navigate(`/board?category=${encodeURIComponent(value)}`)
   }
 
   return (
@@ -48,17 +57,18 @@ export default function CategorySection() {
         className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto"
       >
         {categories.map((cat) => {
-          const count = countsByCategory.get(cat.label) ?? 0
+          const count = counts.data[cat.value] ?? 0
+          const label = CATEGORY_LABELS[cat.value]
           return (
             <button
-              key={cat.label}
+              key={cat.value}
               type="button"
-              aria-pressed={selected === cat.label}
-              onClick={() => handleClick(cat.label)}
+              aria-pressed={selected === cat.value}
+              onClick={() => handleClick(cat.value)}
               className={cn(
                 'flex flex-col items-center gap-3 rounded-2xl border p-6 transition-all duration-300 cursor-pointer',
                 'hover:-translate-y-1 hover:shadow-lg',
-                selected === cat.label
+                selected === cat.value
                   ? 'border-orange-400 bg-white shadow-md scale-105'
                   : 'border-stone-200/60 bg-white/80 backdrop-blur-sm',
               )}
@@ -67,14 +77,16 @@ export default function CategorySection() {
                 className={cn(
                   'w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-sm transition-transform duration-300',
                   cat.color,
-                  selected === cat.label && 'scale-110',
+                  selected === cat.value && 'scale-110',
                 )}
               >
                 <cat.icon className="w-5 h-5 text-white" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-stone-700">{cat.label}</p>
-                <p className="text-xs text-stone-400 mt-0.5">{count}건 모집중</p>
+                <p className="text-sm font-semibold text-stone-700">{label}</p>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  {counts.status === 'success' ? `${count}건` : '\u00a0'}
+                </p>
               </div>
             </button>
           )

@@ -1,26 +1,9 @@
-import { apiRequest, ApiError } from '@/lib/api/http'
 import type { User } from '@/types/user'
+import { apiRequest, ENDPOINTS, setAccessToken } from '@/lib/api/client'
+import { AuthError } from '@/lib/api/errors'
 
-export type AuthErrorCode =
-  | 'EMAIL_EXISTS'
-  | 'INVALID_CREDENTIALS'
-  | 'USER_NOT_FOUND'
-  | 'CODE_INVALID'
-  | 'CODE_EXPIRED'
-  | 'EMAIL_NOT_VERIFIED'
-  | 'PASSWORD_INCORRECT'
-  | 'NOT_AUTHENTICATED'
-  | 'NETWORK'
-
-export class AuthError extends Error {
-  code: AuthErrorCode | string
-
-  constructor(code: AuthErrorCode | string, message: string) {
-    super(message)
-    this.code = code
-    this.name = 'AuthError'
-  }
-}
+export { AuthError }
+export type { AuthErrorCode, FieldError } from '@/lib/api/errors'
 
 export interface AuthResponse {
   user: User
@@ -33,6 +16,8 @@ export interface SignupPayload {
   email: string
   password: string
   nickname: string
+  // 마케팅 이메일 수신 동의 (미지정 시 false). 동의 체크박스 추가 시 연결.
+  emailSubscribed?: boolean
 }
 
 export interface LoginPayload {
@@ -55,180 +40,173 @@ export interface ChangePasswordPayload {
   newPassword: string
 }
 
-interface LoginResponse {
-  accessToken: string
-  tokenType: string
-}
-
-interface MeResponse {
-  id: number
-  email: string
-  nickname: string
-  contact?: string | null
-  emailSubscribed: boolean
-  role: string
-}
-
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
-function toAuthError(error: unknown): AuthError {
-  if (error instanceof ApiError) {
-    return new AuthError(error.code, error.message)
-  }
-  return new AuthError('NETWORK', '요청 처리 중 오류가 발생했습니다.')
+// 백엔드 회원 DTO → 프론트 User 매핑. 필드명 차이는 이 함수 안에서만 흡수한다.
+// MeResponse: { id, email, nickname, role }. contact/createdAt은 응답에 없을 수 있다.
+interface MemberDto {
+  id: string | number
+  email: string
+  nickname: string
+  role?: string
+  contact?: string | null
+  createdAt?: string
+  emailSubscribed?: boolean | null
 }
 
-function toUser(response: MeResponse): User {
+function toUser(dto: MemberDto): User {
   return {
-    id: String(response.id),
-    email: response.email,
-    nickname: response.nickname,
-    contact: response.contact ?? undefined,
-    createdAt: '',
+    id: String(dto.id),
+    email: dto.email,
+    nickname: dto.nickname,
+    role: dto.role,
+    contact: dto.contact ?? undefined,
+    createdAt: dto.createdAt,
+    emailSubscribed: dto.emailSubscribed ?? undefined,
   }
 }
 
-async function getMe(accessToken?: string): Promise<User> {
-  return toUser(
-    await apiRequest<MeResponse>('/api/me', {
-      auth: accessToken ? undefined : 'user',
-      accessToken,
-    }),
-  )
+// 백엔드 LoginResponse (accessToken만 담김 — 회원 정보는 별도 조회)
+interface LoginResponse {
+  accessToken: string
+}
+
+// 백엔드 SignUpResponse (가입 결과 — 토큰 없음)
+interface SignUpResponse {
+  id: number
+  email: string
+  nickname: string
+}
+
+// 로그인/회원가입 응답엔 회원 정보가 없으므로, 토큰을 세팅한 뒤 프로필을 조회한다.
+async function fetchProfile(): Promise<User> {
+  const member = await apiRequest<MemberDto>(ENDPOINTS.me)
+  return toUser(member)
+}
+
+export async function login(payload: LoginPayload): Promise<AuthResponse> {
+  const { accessToken } = await apiRequest<LoginResponse>(ENDPOINTS.login, {
+    method: 'POST',
+    auth: false,
+    retryOnAuth: false,
+    body: { email: normalizeEmail(payload.email), password: payload.password },
+  })
+  setAccessToken(accessToken)
+  const user = await fetchProfile()
+  return { user, accessToken }
+}
+
+// 회원가입은 계정만 생성하고 토큰을 주지 않으므로(201), 가입 직후 로그인을 이어 붙여
+// 기존의 "가입 즉시 로그인" UX를 유지한다.
+export async function signup(payload: SignupPayload): Promise<AuthResponse> {
+  const email = normalizeEmail(payload.email)
+  await apiRequest<SignUpResponse>(ENDPOINTS.signup, {
+    method: 'POST',
+    auth: false,
+    retryOnAuth: false,
+    body: {
+      email,
+      nickname: payload.nickname.trim(),
+      password: payload.password,
+      emailSubscribed: payload.emailSubscribed ?? false,
+    },
+  })
+  // 가입은 성공했으나 이어붙인 자동 로그인이 실패하면, 가입 실패로 오인하지 않도록
+  // 별도 코드로 구분해 호출부에서 로그인 페이지로 유도한다.
+  try {
+    return await login({ email, password: payload.password })
+  } catch {
+    throw new AuthError(
+      'SIGNUP_LOGIN_FAILED',
+      '회원가입은 완료됐어요. 로그인 페이지에서 다시 로그인해주세요.',
+    )
+  }
+}
+
+export async function logout(): Promise<void> {
+  await apiRequest<void>(ENDPOINTS.logout, { method: 'POST', retryOnAuth: false })
+}
+
+// 백엔드 요청 DTO (EmailCodeRequest / EmailVerifyRequest)
+interface EmailCodeRequest {
+  email: string
+}
+
+interface EmailVerifyRequest {
+  email: string
+  code: string
 }
 
 export async function sendVerificationCode(
   email: string,
   options: { intent: VerificationIntent } = { intent: 'signup' },
 ): Promise<void> {
-  try {
-    await apiRequest<void>(
-      options.intent === 'signup'
-        ? '/api/signup/email/code'
-        : '/api/password/email/code',
-      {
-        method: 'POST',
-        body: { email: normalizeEmail(email) },
-      },
-    )
-  } catch (error) {
-    throw toAuthError(error)
-  }
+  const path =
+    options.intent === 'reset' ? ENDPOINTS.resetSendCode : ENDPOINTS.emailSendCode
+  const body: EmailCodeRequest = { email: normalizeEmail(email) }
+  await apiRequest<void>(path, {
+    method: 'POST',
+    auth: false,
+    retryOnAuth: false,
+    body,
+  })
 }
 
-export async function verifyCode(email: string, code: string): Promise<void> {
-  try {
-    await apiRequest<void>('/api/signup/email/verify', {
-      method: 'POST',
-      body: { email: normalizeEmail(email), code: code.trim() },
-    })
-  } catch (error) {
-    throw toAuthError(error)
-  }
-}
-
-export async function verifyResetCode(email: string, code: string): Promise<void> {
-  try {
-    await apiRequest<void>('/api/password/email/verify', {
-      method: 'POST',
-      body: { email: normalizeEmail(email), code: code.trim() },
-    })
-  } catch (error) {
-    throw toAuthError(error)
-  }
-}
-
-export async function signup(payload: SignupPayload): Promise<AuthResponse> {
-  try {
-    await apiRequest('/api/signup', {
-      method: 'POST',
-      body: {
-        email: normalizeEmail(payload.email),
-        password: payload.password,
-        nickname: payload.nickname.trim(),
-        emailSubscribed: false,
-      },
-    })
-    return login({ email: payload.email, password: payload.password })
-  } catch (error) {
-    throw toAuthError(error)
-  }
-}
-
-export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  try {
-    const response = await apiRequest<LoginResponse>('/api/login', {
-      method: 'POST',
-      body: {
-        email: normalizeEmail(payload.email),
-        password: payload.password,
-      },
-    })
-    const user = await getMe(response.accessToken)
-    return { user, accessToken: response.accessToken }
-  } catch (error) {
-    throw toAuthError(error)
-  }
-}
-
-export async function logout(): Promise<void> {
-  try {
-    await apiRequest<void>('/api/logout', {
-      method: 'POST',
-      auth: 'user',
-    })
-  } catch {
-    // 클라이언트 세션은 항상 정리한다.
-  }
-}
-
-export async function updateProfile(
-  _userId: string,
-  payload: UpdateProfilePayload,
-): Promise<User> {
-  try {
-    return toUser(
-      await apiRequest<MeResponse>('/api/me', {
-        method: 'PATCH',
-        auth: 'user',
-        body: {
-          nickname: payload.nickname.trim(),
-          contact: payload.contact?.trim() || null,
-        },
-      }),
-    )
-  } catch (error) {
-    throw toAuthError(error)
-  }
-}
-
-export async function changePassword(
-  _userId: string,
-  payload: ChangePasswordPayload,
+export async function verifyCode(
+  email: string,
+  code: string,
+  options: { intent: VerificationIntent } = { intent: 'signup' },
 ): Promise<void> {
-  try {
-    await apiRequest<void>('/api/me/password', {
-      method: 'PATCH',
-      auth: 'user',
-      body: payload,
-    })
-  } catch (error) {
-    throw toAuthError(error)
-  }
+  const path =
+    options.intent === 'reset' ? ENDPOINTS.resetVerify : ENDPOINTS.emailVerify
+  const body: EmailVerifyRequest = { email: normalizeEmail(email), code: code.trim() }
+  await apiRequest<void>(path, {
+    method: 'POST',
+    auth: false,
+    retryOnAuth: false,
+    body,
+  })
 }
 
 export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
-  try {
-    await apiRequest<void>('/api/password/reset', {
-      method: 'POST',
-      body: {
-        email: normalizeEmail(payload.email),
-        newPassword: payload.newPassword,
-      },
-    })
-  } catch (error) {
-    throw toAuthError(error)
-  }
+  await apiRequest<void>(ENDPOINTS.resetPassword, {
+    method: 'POST',
+    auth: false,
+    retryOnAuth: false,
+    body: { email: normalizeEmail(payload.email), newPassword: payload.newPassword },
+  })
+}
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
+  const contact = payload.contact?.trim()
+  // 백엔드는 프로필 수정도 PATCH /api/me 하나로 받는다.
+  const data = await apiRequest<MemberDto>(ENDPOINTS.me, {
+    method: 'PATCH',
+    body: {
+      nickname: payload.nickname.trim(),
+      contact: contact === '' ? null : contact,
+    },
+  })
+  return toUser(data)
+}
+
+// 이메일 수신 동의 토글. 가입 시 동의 여부를 나중에 바꿀 수 있어야 한다.
+export async function setEmailSubscription(subscribed: boolean): Promise<User> {
+  const data = await apiRequest<MemberDto>(ENDPOINTS.emailSubscription, {
+    method: 'PATCH',
+    body: { emailSubscribed: subscribed },
+  })
+  return toUser(data)
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  await apiRequest<void>(ENDPOINTS.changePassword, {
+    method: 'PATCH',
+    body: {
+      currentPassword: payload.currentPassword,
+      newPassword: payload.newPassword,
+    },
+  })
 }

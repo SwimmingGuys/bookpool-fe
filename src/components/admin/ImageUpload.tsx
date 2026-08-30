@@ -1,18 +1,23 @@
-import { useId, useRef, type ChangeEvent } from 'react'
-import { ImagePlus, X } from 'lucide-react'
+import { useId, useRef, useState, type ChangeEvent } from 'react'
+import { ImagePlus, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { showToast } from '@/lib/toast'
+import { uploadImage } from '@/lib/api/uploads'
+import { AuthError } from '@/lib/api/errors'
 
-// data URL을 localStorage에 저장하므로 용량을 제한한다. (mock 한정 — 실제 API에서는 파일 업로드로 대체)
-const MAX_FILE_SIZE = 1.5 * 1024 * 1024
+const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 interface ImageUploadProps {
   label?: string
   value?: string
-  onChange: (dataUrl: string | undefined) => void
+  onChange: (url: string | undefined) => void
   className?: string
 }
 
+/**
+ * 표지 이미지를 서버에 업로드하고 URL만 폼에 담는다.
+ * 예전에는 data URL을 그대로 저장해 목록 응답마다 base64가 따라다녔다.
+ */
 export default function ImageUpload({
   label = '표지 이미지',
   value,
@@ -21,8 +26,9 @@ export default function ImageUpload({
 }: ImageUploadProps) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
-  const handleSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -31,18 +37,23 @@ export default function ImageUpload({
       return
     }
     if (file.size > MAX_FILE_SIZE) {
-      showToast('이미지 용량은 1.5MB 이하여야 합니다.', 'error')
+      showToast('이미지 용량은 5MB 이하여야 합니다.', 'error')
       return
     }
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') onChange(reader.result)
+    setUploading(true)
+    try {
+      const url = await uploadImage(file)
+      onChange(url)
+    } catch (err) {
+      const message =
+        err instanceof AuthError ? err.message : '이미지 업로드에 실패했습니다.'
+      showToast(message, 'error')
+    } finally {
+      setUploading(false)
+      // 같은 파일을 다시 골라도 change 이벤트가 발생하도록 값을 비운다.
+      if (inputRef.current) inputRef.current.value = ''
     }
-    reader.onerror = () => {
-      showToast('이미지를 불러오지 못했습니다.', 'error')
-    }
-    reader.readAsDataURL(file)
   }
 
   const handleRemove = () => {
@@ -61,6 +72,7 @@ export default function ImageUpload({
         type="file"
         accept="image/*"
         onChange={handleSelect}
+        disabled={uploading}
         className="hidden"
       />
 
@@ -84,13 +96,23 @@ export default function ImageUpload({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="flex h-52 w-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-300 bg-stone-50 text-stone-400 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-500"
+          disabled={uploading}
+          className="flex h-52 w-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-300 bg-stone-50 text-stone-400 transition-colors hover:border-orange-300 hover:bg-orange-50 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <ImagePlus className="h-7 w-7" />
-          <span className="text-xs font-medium">이미지 선택</span>
+          {uploading ? (
+            <>
+              <Loader2 className="h-7 w-7 animate-spin" />
+              <span className="text-xs font-medium">업로드 중...</span>
+            </>
+          ) : (
+            <>
+              <ImagePlus className="h-7 w-7" />
+              <span className="text-xs font-medium">이미지 선택</span>
+            </>
+          )}
         </button>
       )}
-      <p className="text-xs text-stone-400">JPG·PNG, 최대 1.5MB</p>
+      <p className="text-xs text-stone-400">JPG·PNG, 최대 5MB</p>
     </div>
   )
 }

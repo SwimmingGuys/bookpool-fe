@@ -5,13 +5,13 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 ## Commands
 
 ```bash
-npm run dev      # Vite dev server with HMR
+npm run dev      # Vite dev server with HMR (프록시로 /api → 백엔드)
 npm run build    # tsc -b (typecheck) then vite build
 npm run lint     # ESLint over the repo
 npm run preview  # Serve the production build
 ```
 
-There is no test runner configured. Type-checking happens via `tsc -b` as part of `build`; run `npx tsc -b` to typecheck without bundling.
+There is no test runner configured. Type-checking happens via `tsc -b` as part of `build`; run `npx tsc -b` to typecheck without bundling. `npm run lint` must pass — `eslint-plugin-react-hooks` v7 is on, and its `set-state-in-effect` / `refs` rules are **errors**, not warnings.
 
 ## Stack
 
@@ -21,34 +21,75 @@ The product (BookPool) is a Korean-language platform for book review/beta-reader
 
 ## Architecture
 
-### No backend — everything is mocked in the browser
-There is no server. All "API" calls live in `src/lib/api/` (currently `auth.ts`) and persist to `localStorage` behind an artificial `delay()`. Recruitment listings come from `src/data/mockRecruitments.ts`, generated deterministically. Treat these modules as the seam where a real API would later plug in: components call the `lib/` hooks, not `localStorage` directly.
+### Backend-connected — one HTTP client, one error type
+The frontend talks to a Spring backend. **All requests go through `lib/api/client.ts`**; there is no second client.
+
+- `BASE_URL` defaults to `/api` (same origin). `vite.config.ts` proxies `/api` to `VITE_API_PROXY_TARGET` in dev. Set `VITE_API_BASE_URL` (including `/api`) only to call a different origin directly.
+- `ENDPOINTS` is the single place where paths live. Add new ones there, not inline.
+- `apiRequest(path, { method, body, query, auth, retryOnAuth, token })` unwraps the backend's `ApiResult<T>` envelope and returns `data`. `apiUpload` handles multipart.
+- On 401 it calls `/reissue` once (deduped across concurrent requests) and retries; `lib/auth.ts` wires `configureClient` to persist the refreshed token and clear the session when refresh fails.
+- Every failure throws `AuthError` (aliased `ApiError`) with a typed `.code` (`ApiErrorCode`) and a Korean `.message`. Branch on `.code`, surface `.message`. `isNotFound(err)` distinguishes a missing resource from a network/server failure — the detail pages rely on this.
+- The admin session is separate: `lib/adminAuth.ts` persists its own token and admin calls pass it via the `token` option, so it never touches the user's `accessToken`.
+
+Per-domain modules (`campaigns`, `notices`, `inquiries`, `notifications`, `reviews`, `uploads`, `auth`, `adminAuth`) own the mapping between backend DTOs (UPPER_SNAKE enums, `publisherName`, `deadlineAt`) and the frontend domain types. **Keep that translation inside `lib/api/`** — components never see backend field names.
+
+### Data fetching: `useAsyncData`, not a data library
+Page-scoped fetches use `lib/useAsyncData.ts`, which returns `{ data, status, error, isLoading, reload }`. It serializes its `deps` to compare them, so inline arrays/objects are fine. Always render three states — skeleton while `loading`, `ErrorState` with `onRetry` on `error`, `EmptyState` only when the result really is empty. Showing "결과 없음" during a fetch was a real bug; don't reintroduce it.
+
+`lib/recruitmentsSource.ts` builds on it:
+- `useRecruitmentList` — server-side search/filter/sort with "더 보기" pagination. The first page lives in `useAsyncData`; only appended pages are local state.
+- `useRecruitmentCalendar` — the visible month only (the calendar needs every posting in that month to draw).
+- `useRecruitment` — single fetch for the detail page. **Never look a recruitment up in a list cache**; direct links broke that way.
+
+**Filtering and sorting belong on the server.** `filterRecruitments`/`sortRecruitments` in `lib/recruitmentFilter.ts` are only for bounded, fully-loaded sets (the favorites-only board view, a selected calendar day).
 
 ### State: hand-rolled external stores, not a state library
-State that must persist or be shared across components uses `useSyncExternalStore` over a small store, **not** Context or Redux/Zustand. Two patterns coexist:
+Shared or persisted state uses `useSyncExternalStore` over a small store, **not** Context or Redux/Zustand:
 
-- **`lib/createStore.ts`** — generic factory with optional `localStorage` persistence and cross-tab `storage`-event sync. Used by `lib/auth.ts` (the `bookpool:auth-v2` key) and `lib/toast.ts`.
-- **Per-user module-level stores** — `lib/recruitmentState.ts` (favorites, recently-viewed) and `lib/notifications.ts` hand-roll their own listener sets + cache keyed by the current user id (`bookpool:favorites:${userId}`, `bookpool:recent:${userId}`, etc.). A `syncXUser(userId)` function, called from a `useEffect` in the hook, reloads the cache when the logged-in user changes.
+- **`lib/createStore.ts`** — generic factory with optional `localStorage` persistence and cross-tab `storage` sync. Used by `lib/auth.ts` (`bookpool:auth-v2`), `lib/adminAuth.ts` (`bookpool:admin-auth`), `lib/toast.ts`.
+- **Per-user module stores** — `lib/recruitmentState.ts` (favorites, recently-viewed) and `lib/notifications.ts` (subscription, notification queue) hand-roll listener sets plus a cache keyed by the current user id, reloaded by a `syncXUser(userId)` called from a `useEffect`. Mutations are optimistic and roll back on failure.
 
-When adding shared state, follow the existing pattern (an external store exposed through a `useX()` hook) rather than introducing a state-management dependency. Always pass a stable `getServerSnapshot` (the `EMPTY_*` constants) to keep SSR/initial-render snapshots referentially stable.
+Always pass a stable `getServerSnapshot` (the `EMPTY_*` constants) so snapshots stay referentially stable.
 
-### Auth
-`lib/auth.ts` exposes `useAuth()` (login/signup/logout/updateProfile/changePassword). Mock auth in `lib/api/auth.ts` implements an email-verification flow: `sendVerificationCode` → `verifyCode` (stored in in-memory `Map`/`Set`, so codes do **not** survive reload) → `signup`/`resetPassword`. Errors are thrown as `AuthError` with a typed `code` (e.g. `EMAIL_EXISTS`, `CODE_EXPIRED`) — catch and branch on `.code`, surface `.message` (already Korean) to users. Registered users persist under `bookpool:mock-users`. Protected routes wrap elements in `<RequireAuth>` (`components/auth/RequireAuth.tsx`).
+### React rules that bite here
+- **No `setState` synchronously inside an effect.** To reset state when an input changes, compare against previous state *during render* (see `BoardPage`'s `syncedQuery`, `useAsyncData`'s `requestKey`).
+- **No writing refs during render.** Update a "latest value" ref inside a `useEffect` with no deps, declared *before* the effect that reads it.
 
 ### Routing
-All routes are declared in `src/App.tsx`. Public auth pages (`/login`, `/signup`, `/forgot-password`) render outside `<Layout>`; everything else renders inside `<Layout>` (`Header` + `<Outlet>`). `/mypage` is a nested layout route with `account` / `recruitments` / `notifications` children.
+All routes are in `src/App.tsx`. Auth pages (`/login`, `/signup`, `/forgot-password`) and the whole `/admin` tree render outside `<Layout>`; everything else renders inside it (`Header` + `<Outlet>`). `/mypage` is a nested layout route (`account` / `recruitments` / `notifications`). `vercel.json` rewrites all non-`/api` paths to `index.html` — without it, deep links 404 in production.
 
 ### Domain model
 `types/recruitment.ts` is the core type. Key invariants:
-- `RecruitmentType` is the union `'Reviewer' | 'Beta Reader'`; map to Korean labels via `RECRUITMENT_TYPE_LABELS` / `RECRUITMENT_TYPE_OPTIONS`, never hardcode the Korean strings.
+- `RecruitmentType` is `'Reviewer' | 'Beta Reader'`; map to Korean via `RECRUITMENT_TYPE_LABELS` / `RECRUITMENT_TYPE_OPTIONS`, never hardcode the Korean strings. The same goes for `BOOK_FORMAT_LABELS`, `REVIEW_CHANNEL_LABELS`, `RECRUITMENT_SOURCE_LABELS`, `PUBLISH_STATUS_LABELS`.
 - `CATEGORIES` is the canonical category list (`as const`).
-- Filtering logic lives in `lib/recruitmentFilter.ts` (`filterRecruitments`, plus `validateQuery` which rejects `<>"'`;` chars and caps length). The board can sort/group by `lib/dateBasis.ts` (recruit-start vs recruit-end).
+- `applyUrl` is the whole point of a posting — a recruitment without one shows a disabled CTA, and the admin list flags it.
+- `publishStatus` (`draft` | `published`) is the review queue. Crawled postings will arrive as `draft` and go through the same admin screen; keep that path working.
+- `source` / `sourceUrl` / `collectedAt` record where a posting came from. `recruitmentDedupeKey()` (book + publisher + deadline) is how the same posting from multiple sources is recognized.
 
-### Dates are deterministic by design
-`lib/date.ts` defines a fixed demo "today" (`TODAY_ISO = '2026-05-23'`) so the calendar and mock data stay stable across runs. Use `TODAY_DATE` / `toIsoDate` / `formatMonthDay` / `getWeekdayKo` rather than `new Date()` directly when working with recruitment dates, or the deterministic UI will drift.
+### Dates
+`lib/date.ts` owns the real "today" (`TODAY_DATE` / `TODAY_ISO`, computed once at module load, local time). Use `parseIsoDate` / `toLocalIsoDate` rather than `new Date(iso)` or `toISOString()` — both shift the day in KST. `daysUntil`, `formatFullDate`, `formatMonthDay`, `getWeekdayKo`, `formatRelativeTime` live here too.
+
+### SEO / sharing
+`usePageMeta` (`lib/useDocumentTitle.ts`) sets title, description, OG/Twitter tags and canonical per route; `og:image` is only emitted when a real image exists. Postings spread by link, so keep detail pages calling it. Note the app is CSR — crawlers that don't run JS see only `index.html`'s defaults, so per-posting previews still need prerendering.
+
+### Page shell — don't hand-roll containers or titles
+Every page renders inside `components/layout/PageContainer.tsx` (`narrow` 3xl / `default` 5xl / `wide` 7xl) and titles come from `components/layout/PageHeader.tsx` (title, description, `backTo`, `actions`). Widths and outer padding live *only* in `PageContainer` — pages used to pick their own `max-w-*` and `px-6 py-10`, which is why five different widths coexisted. `Layout` renders `Header` + `<Outlet>` + `Footer`.
 
 ### Styling
-Compose class names with `cn()` from `lib/cn.ts` (clsx + tailwind-merge). `components/ui/` holds the reusable primitives (`Button`, `Badge`, `Chip`, `Toast`, etc.); `components/{home,board,auth,layout}/` hold feature-specific components.
+Compose class names with `cn()` from `lib/cn.ts` (clsx + tailwind-merge). `components/ui/` holds reusable primitives (`Button`, `ButtonLink`, `Badge`, `Chip`, `Toast`, `Skeleton`, `ErrorState`, `StarRating`, `ShareButton`); `components/{home,board,auth,layout,recruitment,notice,admin}/` hold feature components.
+
+House rules:
+- **Palette is stone (neutral) + orange (accent).** No `gray-*`, no second accent hue.
+- **Never write button classes by hand.** `Button` for actions, `ButtonLink` for navigation — both read from `components/ui/buttonStyles.ts`.
+- **Radius:** list/grid cards `rounded-xl`, panels and sections `rounded-2xl`.
+- **Section padding:** `p-4 sm:p-5` for compact cards, `p-5 sm:p-6` for panels.
+
+### Responsive
+Mobile-first; `md` (768px) is where the layout actually changes shape.
+- Horizontal rows of tabs/chips scroll instead of wrapping: `-mx-4 overflow-x-auto scrollbar-none px-4 sm:mx-0 sm:px-0`, with `shrink-0` on the items. `scrollbar-none` is a custom `@utility` in `src/index.css`.
+- The calendar has two modes: below `md` each day cell is compact (day number, count, one dot per posting); at `md`+ it shows book-title previews. Keep both working when touching `CalendarBoard`.
+- The admin sidebar is `hidden md:flex`, so `AdminLayout` also renders a scrollable top tab bar under `md` — don't remove it, mobile has no other way to navigate the back office.
+- Verify at 375px that `document.documentElement.scrollWidth === innerWidth`; horizontal overflow is a bug.
 
 ## Conventions
 

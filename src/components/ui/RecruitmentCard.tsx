@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Eye } from 'lucide-react'
+import { categoryLabel } from '@/types/recruitment'
 import type { Recruitment } from '@/types/recruitment'
 import Badge from './Badge'
 import DDay from './DDay'
@@ -26,7 +27,7 @@ export default function RecruitmentCard({ recruitment }: RecruitmentCardProps) {
       </h3>
 
       <p className="text-sm text-stone-500 mb-2">
-        {publisher} · {category}
+        {publisher} · {categoryLabel(category)}
       </p>
 
       <div className="mt-auto flex items-center gap-1 text-sm text-stone-400">

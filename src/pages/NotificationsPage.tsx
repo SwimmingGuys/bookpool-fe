@@ -1,55 +1,69 @@
 import { Link } from 'react-router-dom'
 import { Bell, BellOff } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import type { Recruitment } from '@/types/recruitment'
-import { RECRUITMENT_TYPE_LABELS } from '@/types/recruitment'
-import { useNotifications, type Notification } from '@/lib/notifications'
-import { useNotificationSubscriptions } from '@/lib/notifications'
-import { TODAY_DATE } from '@/lib/date'
+import {
+  isSubscriptionEmpty,
+  useNotifications,
+  useNotificationSubscriptions,
+  type NotificationItem,
+} from '@/lib/notifications'
+import type { NotificationKind } from '@/lib/api/notifications'
+import { formatRelativeTime } from '@/lib/date'
 import EmptyState from '@/components/ui/EmptyState'
+import PageContainer from '@/components/layout/PageContainer'
+import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
-function formatRelativeTime(iso: string): string {
-  const past = new Date(iso)
-  const diffMs = TODAY_DATE.getTime() - past.getTime()
-  const diffDays = Math.floor(diffMs / 86_400_000)
-  if (diffDays < 0) return iso.slice(5).replace('-', '.')
-  if (diffDays === 0) return '오늘'
-  if (diffDays === 1) return '어제'
-  if (diffDays < 7) return `${diffDays}일 전`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전`
-  return `${Math.floor(diffDays / 30)}달 전`
+const KIND_LABELS: Record<NotificationKind, string> = {
+  new_recruitment: '새 모집',
+  deadline_soon: '마감 임박',
+  announcement: '발표',
+  etc: '알림',
+}
+
+const kindStyles: Record<NotificationKind, string> = {
+  new_recruitment: 'text-orange-600',
+  deadline_soon: 'text-red-500',
+  announcement: 'text-stone-700',
+  etc: 'text-stone-500',
 }
 
 export default function NotificationsPage() {
   useDocumentTitle('알림')
-  const { notifications, unreadCount, markAllAsRead, markAsRead } =
-    useNotifications()
+  const { notifications, unreadCount, markAllAsRead, markAsRead } = useNotifications()
   const { subscription } = useNotificationSubscriptions()
 
-  const hasSubscription =
-    subscription.types.length +
-      subscription.categories.length +
-      subscription.publishers.length >
-    0
+  const hasSubscription = !isSubscriptionEmpty(subscription)
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10">
-      {unreadCount > 0 && (
-        <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
-          <span className="text-xs font-medium text-stone-500">
-            읽지 않은 알림{' '}
-            <span className="text-orange-500 tabular-nums">{unreadCount}</span>개
-          </span>
-          <button
-            type="button"
-            onClick={markAllAsRead}
-            className="text-xs font-medium text-stone-500 hover:text-orange-600 underline-offset-2 hover:underline"
-          >
-            모두 읽음으로 표시
-          </button>
-        </div>
-      )}
+    <PageContainer width="narrow">
+      <PageHeader
+        title="알림"
+        description={
+          unreadCount > 0 ? (
+            <>
+              읽지 않은 알림{' '}
+              <span className="font-semibold text-orange-500 tabular-nums">
+                {unreadCount}
+              </span>
+              개
+            </>
+          ) : (
+            '구독한 조건에 맞는 새 공고를 여기에서 알려드려요.'
+          )
+        }
+        actions={
+          unreadCount > 0 ? (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="text-xs font-medium text-stone-500 underline-offset-2 hover:text-orange-600 hover:underline"
+            >
+              모두 읽음으로 표시
+            </button>
+          ) : undefined
+        }
+      />
 
       {notifications.length === 0 ? (
         <NotificationsEmpty hasSubscription={hasSubscription} />
@@ -57,14 +71,14 @@ export default function NotificationsPage() {
         <div className="flex flex-col gap-2">
           {notifications.map((n) => (
             <NotificationCard
-              key={n.recruitment.id}
+              key={n.id}
               notification={n}
-              onOpen={() => markAsRead(n.recruitment.id)}
+              onOpen={() => markAsRead(n.id)}
             />
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }
 
@@ -72,79 +86,73 @@ function NotificationCard({
   notification,
   onOpen,
 }: {
-  notification: Notification
+  notification: NotificationItem
   onOpen: () => void
 }) {
-  const { recruitment, isUnread } = notification
-  return (
-    <Link
-      to={`/recruitments/${recruitment.id}`}
-      onClick={onOpen}
-      className={cn(
-        'group relative block rounded-xl border p-4 transition-all no-underline',
-        isUnread
-          ? 'border-orange-200 bg-orange-50/50 hover:bg-orange-50'
-          : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50',
-      )}
-    >
-      {isUnread && (
-        <span
-          aria-hidden
-          className="absolute top-5 left-2.5 w-1.5 h-1.5 rounded-full bg-orange-500"
-        />
-      )}
-      <div className={cn('flex flex-col gap-1', isUnread && 'pl-3')}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs">
-            <span
-              className={cn(
-                'font-semibold',
-                recruitment.badgeLabel === 'Reviewer'
-                  ? 'text-orange-600'
-                  : 'text-stone-700',
-              )}
-            >
-              {RECRUITMENT_TYPE_LABELS[recruitment.badgeLabel]}
-            </span>
-            <span className="text-stone-300">·</span>
-            <span className="text-stone-500">{recruitment.category}</span>
-            <span className="text-stone-300">·</span>
-            <span className="text-stone-500">{recruitment.publisher}</span>
-          </div>
-          <span className="text-xs text-stone-400 shrink-0 tabular-nums">
-            {formatRelativeTime(recruitment.recruitStartDate)}
+  const { isUnread, kind, campaignId, campaignTitle, bookTitle, publisher, message } =
+    notification
+
+  const body = (
+    <div className={cn('flex flex-col gap-1', isUnread && 'pl-3')}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs">
+          <span className={cn('font-semibold', kindStyles[kind])}>
+            {KIND_LABELS[kind]}
           </span>
-        </div>
-
-        <p
-          className={cn(
-            'text-sm leading-snug line-clamp-2 group-hover:text-orange-600 transition-colors',
-            isUnread ? 'font-bold text-stone-800' : 'font-medium text-stone-700',
+          {publisher && (
+            <>
+              <span className="text-stone-300">·</span>
+              <span className="text-stone-500">{publisher}</span>
+            </>
           )}
-        >
-          {recruitment.bookTitle}
-        </p>
-
-        <DDayLine recruitment={recruitment} />
+        </div>
+        <span className="shrink-0 text-xs text-stone-400 tabular-nums">
+          {formatRelativeTime(notification.createdAt)}
+        </span>
       </div>
-    </Link>
-  )
-}
 
-function DDayLine({ recruitment }: { recruitment: Recruitment }) {
-  if (recruitment.status === 'closed') {
-    return <p className="text-xs text-stone-400">모집 마감</p>
+      <p
+        className={cn(
+          'line-clamp-2 text-sm leading-snug transition-colors group-hover:text-orange-600',
+          isUnread ? 'font-bold text-stone-800' : 'font-medium text-stone-700',
+        )}
+      >
+        {bookTitle || campaignTitle.replace(/\n/g, ' ')}
+      </p>
+
+      {message && <p className="text-xs text-stone-500">{message}</p>}
+    </div>
+  )
+
+  const className = cn(
+    'group relative block rounded-xl border p-4 transition-all no-underline',
+    isUnread
+      ? 'border-orange-200 bg-orange-50/50 hover:bg-orange-50'
+      : 'border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50',
+  )
+
+  const unreadDot = isUnread && (
+    <span
+      aria-hidden
+      className="absolute left-2.5 top-5 h-1.5 w-1.5 rounded-full bg-orange-500"
+    />
+  )
+
+  // 공고와 연결되지 않은 알림(공지 등)은 링크로 감싸지 않는다.
+  if (!campaignId) {
+    return (
+      <div className={className}>
+        {unreadDot}
+        {body}
+      </div>
+    )
   }
-  const urgent = recruitment.daysRemaining <= 3
+
   return (
-    <p
-      className={cn(
-        'text-xs font-medium',
-        urgent ? 'text-red-500' : 'text-stone-500',
-      )}
-    >
-      D-{recruitment.daysRemaining} 마감
-    </p>
+    <Link to={`/recruitments/${campaignId}`} onClick={onOpen} className={className}>
+      {unreadDot}
+      {body}
+    </Link>
   )
 }
 
@@ -157,7 +165,7 @@ function NotificationsEmpty({ hasSubscription }: { hasSubscription: boolean }) {
         description={
           <Link
             to="/mypage/notifications"
-            className="text-orange-600 hover:text-orange-700 no-underline"
+            className="text-orange-600 no-underline hover:text-orange-700"
           >
             알림 설정에서 구독 조건 추가하기
           </Link>

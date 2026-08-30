@@ -1,6 +1,7 @@
 import {
-  CATEGORIES,
+  CATEGORY_OPTIONS,
   RECRUITMENT_TYPE_OPTIONS,
+  type Category,
   type RecruitmentType,
 } from '@/types/recruitment'
 import type { RecruitmentFilter } from '@/lib/recruitmentFilter'
@@ -24,7 +25,7 @@ function toggleArray<T>(list: T[], value: T): T[] {
 }
 
 export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
-  const toggleCategory = (cat: string) =>
+  const toggleCategory = (cat: Category) =>
     onChange({ ...filter, categories: toggleArray(filter.categories, cat) })
 
   const toggleType = (type: RecruitmentType) =>
@@ -60,14 +61,14 @@ export default function FilterPanel({ filter, onChange }: FilterPanelProps) {
         color={CATEGORY_FILTER_COLOR}
       >
         <div className="flex flex-wrap gap-1.5 max-w-[260px]">
-          {CATEGORIES.map((cat) => (
+          {CATEGORY_OPTIONS.map((opt) => (
             <Chip
-              key={cat}
-              selected={filter.categories.includes(cat)}
+              key={opt.value}
+              selected={filter.categories.includes(opt.value)}
               color={CATEGORY_FILTER_COLOR}
-              onClick={() => toggleCategory(cat)}
+              onClick={() => toggleCategory(opt.value)}
             >
-              {cat}
+              {opt.label}
             </Chip>
           ))}
         </div>

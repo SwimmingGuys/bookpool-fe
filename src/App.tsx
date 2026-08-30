@@ -2,7 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from '@/components/layout/Layout'
 import HomePage from '@/pages/HomePage'
 import BoardPage from '@/pages/BoardPage'
+import CalendarPage from '@/pages/CalendarPage'
 import RecruitmentDetailPage from '@/pages/RecruitmentDetailPage'
+import PublisherPage from '@/pages/PublisherPage'
 import NoticePage from '@/pages/NoticePage'
 import NoticeDetailPage from '@/pages/NoticeDetailPage'
 import SupportPage from '@/pages/SupportPage'
@@ -18,6 +20,8 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import AdminLoginPage from '@/pages/admin/AdminLoginPage'
 import AdminRecruitmentsPage from '@/pages/admin/AdminRecruitmentsPage'
 import AdminRecruitmentFormPage from '@/pages/admin/AdminRecruitmentFormPage'
+import AdminNoticesPage from '@/pages/admin/AdminNoticesPage'
+import AdminInquiriesPage from '@/pages/admin/AdminInquiriesPage'
 import AdminLayout from '@/components/admin/AdminLayout'
 import RequireAdmin from '@/components/admin/RequireAdmin'
 import RequireAuth from '@/components/auth/RequireAuth'
@@ -45,11 +49,15 @@ function App() {
           <Route path="recruitments" element={<AdminRecruitmentsPage />} />
           <Route path="recruitments/new" element={<AdminRecruitmentFormPage />} />
           <Route path="recruitments/:id" element={<AdminRecruitmentFormPage />} />
+          <Route path="notices" element={<AdminNoticesPage />} />
+          <Route path="inquiries" element={<AdminInquiriesPage />} />
         </Route>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/recruitments/:id" element={<RecruitmentDetailPage />} />
+          <Route path="/publishers/:name" element={<PublisherPage />} />
           <Route path="/notice" element={<NoticePage />} />
           <Route path="/notice/:id" element={<NoticeDetailPage />} />
           <Route

@@ -1,94 +1,124 @@
-import { useEffect, useSyncExternalStore } from 'react'
-import type { Recruitment } from '@/types/recruitment'
+import { useCallback } from 'react'
+import type { PublishStatus, Recruitment, RecruitmentStatus } from '@/types/recruitment'
 import {
   createAdminCampaign,
   deleteAdminCampaign,
+  getAdminCampaign,
   listAdminCampaigns,
+  setCampaignPublishStatus,
+  setCampaignStatus,
   updateAdminCampaign,
   type RecruitmentInput,
 } from '@/lib/api/campaigns'
-import { refreshRecruitments } from '@/lib/recruitmentsSource'
+import { getAdminToken } from '@/lib/adminAuth'
+import { useAsyncData, type LoadStatus } from '@/lib/useAsyncData'
 
 export type { RecruitmentInput } from '@/lib/api/campaigns'
 
 const EMPTY: Recruitment[] = []
 
-let adminRecruitmentsCache: Recruitment[] = []
-let loaded = false
-let loading: Promise<void> | null = null
-const listeners = new Set<() => void>()
-
-function emit() {
-  listeners.forEach((listener) => listener())
+export interface AdminRecruitmentListResult {
+  recruitments: Recruitment[]
+  status: LoadStatus
+  error: Error | null
+  reload: () => void
 }
 
-function subscribe(listener: () => void) {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
+/**
+ * 백오피스 목록. `publishStatus`로 검수 큐(draft)와 게시된 공고(published)를 나눠 본다.
+ */
+export function useAdminRecruitments(
+  params: { publishStatus?: PublishStatus; query?: string } = {},
+): AdminRecruitmentListResult {
+  const result = useAsyncData(
+    () =>
+      listAdminCampaigns(
+        { publishStatus: params.publishStatus, query: params.query || undefined },
+        getAdminToken(),
+      ),
+    { content: EMPTY, page: 0, size: 100, totalElements: 0, totalPages: 0, hasNext: false },
+    [params.publishStatus, params.query],
+  )
+
+  return {
+    recruitments: result.data.content,
+    status: result.status,
+    error: result.error,
+    reload: result.reload,
+  }
 }
 
-export async function refreshAdminRecruitments(): Promise<void> {
-  if (loading) return loading
-  loading = listAdminCampaigns()
-    .then((items) => {
-      adminRecruitmentsCache = items
-      loaded = true
-      emit()
-    })
-    .finally(() => {
-      loading = null
-    })
-  return loading
+// 수정 화면에서 쓰는 단건 조회. 목록을 거치지 않고 바로 받아온다.
+export function useAdminRecruitment(id: string | undefined): {
+  recruitment: Recruitment | null
+  status: LoadStatus
+  error: Error | null
+} {
+  const result = useAsyncData<Recruitment | null>(
+    () => (id ? getAdminCampaign(id, getAdminToken()) : Promise.resolve(null)),
+    null,
+    [id],
+  )
+  return { recruitment: result.data, status: result.status, error: result.error }
 }
 
 export async function createRecruitment(
   input: RecruitmentInput,
 ): Promise<Recruitment> {
-  const created = await createAdminCampaign(input)
-  adminRecruitmentsCache = [created, ...adminRecruitmentsCache]
-  emit()
-  void refreshRecruitments()
-  return created
+  return createAdminCampaign(input, getAdminToken())
 }
 
 export async function updateRecruitment(
   id: string,
   input: RecruitmentInput,
-): Promise<Recruitment | undefined> {
-  const current = adminRecruitmentsCache.find((item) => item.id === id)
-  if (!current) return undefined
-  const updated = await updateAdminCampaign(current, input)
-  adminRecruitmentsCache = adminRecruitmentsCache.map((item) =>
-    item.id === id ? updated : item,
-  )
-  emit()
-  void refreshRecruitments()
-  return updated
+  status?: RecruitmentStatus,
+): Promise<Recruitment> {
+  return updateAdminCampaign(id, input, status, getAdminToken())
 }
 
 export async function deleteRecruitment(id: string): Promise<void> {
-  await deleteAdminCampaign(id)
-  adminRecruitmentsCache = adminRecruitmentsCache.filter((item) => item.id !== id)
-  emit()
-  void refreshRecruitments()
+  await deleteAdminCampaign(id, getAdminToken())
 }
 
-export function getAdminRecruitmentById(id: string): Recruitment | undefined {
-  return adminRecruitmentsCache.find((item) => item.id === id)
+// 검수 큐 → 게시 (또는 반대로 내리기)
+export async function publishRecruitment(
+  id: string,
+  publishStatus: PublishStatus,
+): Promise<Recruitment> {
+  return setCampaignPublishStatus(id, publishStatus, getAdminToken())
 }
 
-export function getAdminRecruitments(): Recruitment[] {
-  return adminRecruitmentsCache
+// 모집중 ↔ 마감 수동 전환
+export async function changeRecruitmentStatus(
+  id: string,
+  status: RecruitmentStatus,
+): Promise<Recruitment> {
+  return setCampaignStatus(id, status, getAdminToken())
 }
 
-export function useAdminRecruitments(): Recruitment[] {
-  useEffect(() => {
-    if (!loaded) void refreshAdminRecruitments()
-  }, [])
-
-  return useSyncExternalStore(
-    subscribe,
-    () => adminRecruitmentsCache,
-    () => EMPTY,
-  )
+// 목록 화면에서 액션 후 재조회를 걸기 위한 헬퍼
+export function useAdminRecruitmentActions(reload: () => void) {
+  return {
+    remove: useCallback(
+      async (id: string) => {
+        await deleteRecruitment(id)
+        reload()
+      },
+      [reload],
+    ),
+    publish: useCallback(
+      async (id: string, publishStatus: PublishStatus) => {
+        await publishRecruitment(id, publishStatus)
+        reload()
+      },
+      [reload],
+    ),
+    changeStatus: useCallback(
+      async (id: string, status: RecruitmentStatus) => {
+        await changeRecruitmentStatus(id, status)
+        reload()
+      },
+      [reload],
+    ),
+  }
 }

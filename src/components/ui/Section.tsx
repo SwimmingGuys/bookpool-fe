@@ -22,17 +22,19 @@ export default function Section({
   children,
 }: SectionProps) {
   return (
-    <section className={cn('relative px-6 py-20 md:py-28 overflow-hidden', background)}>
+    <section className={cn('relative overflow-hidden px-4 py-14 sm:px-6 sm:py-20 md:py-24', background)}>
       {blobs.map((blob, i) => (
         <div key={i} className={cn('absolute rounded-full blur-3xl', blob.className)} />
       ))}
 
-      <AnimateIn className="relative text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">{title}</h2>
-        <p className="mt-3 text-base text-gray-500">{subtitle}</p>
+      <AnimateIn className="relative mb-8 text-center sm:mb-12">
+        <h2 className="text-2xl font-extrabold text-stone-800 sm:text-3xl md:text-4xl">
+          {title}
+        </h2>
+        <p className="mt-3 text-sm text-stone-500 sm:text-base">{subtitle}</p>
       </AnimateIn>
 
-      <div className="relative">{children}</div>
+      <div className="relative mx-auto w-full max-w-7xl">{children}</div>
     </section>
   )
 }

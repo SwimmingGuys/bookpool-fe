@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# 백오피스와 개인 화면은 색인하지 않는다.
+Disallow: /admin
+Disallow: /mypage
+Disallow: /notifications
