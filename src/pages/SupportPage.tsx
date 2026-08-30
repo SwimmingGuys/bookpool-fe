@@ -16,7 +16,6 @@ import FormField from '@/components/auth/FormField'
 import Button from '@/components/ui/Button'
 import EmptyState from '@/components/ui/EmptyState'
 import PageContainer from '@/components/layout/PageContainer'
-import PageHeader from '@/components/layout/PageHeader'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 const TABS = [
@@ -91,11 +90,6 @@ export default function SupportPage() {
 
   return (
     <PageContainer width="narrow">
-      <PageHeader
-        title="문의 / 요청"
-        description="서비스 이용 중 불편한 점이나 추가했으면 하는 기능을 알려주세요."
-      />
-
       <div
         role="tablist"
         aria-label="문의 탭"

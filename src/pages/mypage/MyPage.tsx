@@ -2,7 +2,6 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Bell, ClipboardList, UserCog } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import PageContainer from '@/components/layout/PageContainer'
-import PageHeader from '@/components/layout/PageHeader'
 
 // 그동안 마이페이지 하위 화면은 사용자 메뉴 드롭다운으로만 갈 수 있었다.
 const TABS = [
@@ -14,8 +13,6 @@ const TABS = [
 export default function MyPage() {
   return (
     <PageContainer>
-      <PageHeader title="마이페이지" />
-
       {/* 모바일에서는 탭이 넘치면 가로로 스크롤된다 */}
       <nav
         aria-label="마이페이지"
