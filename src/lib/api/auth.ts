@@ -181,7 +181,8 @@ export async function resetPassword(payload: ResetPasswordPayload): Promise<void
 
 export async function updateProfile(payload: UpdateProfilePayload): Promise<User> {
   const contact = payload.contact?.trim()
-  const data = await apiRequest<MemberDto>(ENDPOINTS.updateProfile, {
+  // 백엔드는 프로필 수정도 PATCH /api/me 하나로 받는다.
+  const data = await apiRequest<MemberDto>(ENDPOINTS.me, {
     method: 'PATCH',
     body: {
       nickname: payload.nickname.trim(),

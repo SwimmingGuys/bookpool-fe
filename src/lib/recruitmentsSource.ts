@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Recruitment, RecruitmentType } from '@/types/recruitment'
+import type {
+  Category,
+  DeadlineFilter,
+  Recruitment,
+  RecruitmentType,
+} from '@/types/recruitment'
 import {
   DEFAULT_PAGE_SIZE,
   getCampaign,
@@ -7,15 +12,15 @@ import {
   type CampaignSortKey,
 } from '@/lib/api/campaigns'
 import { useAsyncData, type LoadStatus } from '@/lib/useAsyncData'
-import type { DateBasis } from '@/lib/dateBasis'
+import { getDateByBasis, type DateBasis } from '@/lib/dateBasis'
 
 const EMPTY: Recruitment[] = []
 
 export interface RecruitmentQuery {
   query: string
-  categories: string[]
+  categories: Category[]
   types: RecruitmentType[]
-  withinDays?: number
+  deadline?: DeadlineFilter
   // 출판사 페이지처럼 한 출판사로 고정해 볼 때 쓴다.
   publisher?: string
   sort: CampaignSortKey
@@ -49,7 +54,7 @@ export function useRecruitmentList(
         publisher: params.publisher,
         categories: params.categories.length > 0 ? params.categories : undefined,
         types: params.types.length > 0 ? params.types : undefined,
-        withinDays: params.withinDays,
+        deadline: params.deadline,
         sort: params.sort,
         page: 0,
         size,
@@ -60,7 +65,7 @@ export function useRecruitmentList(
       params.publisher,
       params.categories,
       params.types,
-      params.withinDays,
+      params.deadline,
       params.sort,
       size,
     ],
@@ -79,7 +84,7 @@ export function useRecruitmentList(
     params.publisher,
     params.categories,
     params.types,
-    params.withinDays,
+    params.deadline,
     params.sort,
     size,
   ])
@@ -118,7 +123,7 @@ export function useRecruitmentList(
       publisher: current.publisher,
       categories: current.categories.length > 0 ? current.categories : undefined,
       types: current.types.length > 0 ? current.types : undefined,
-      withinDays: current.withinDays,
+      deadline: current.deadline,
       sort: current.sort,
       page: nextPage,
       size,
@@ -157,9 +162,17 @@ function monthRange(year: number, monthIndex: number): { from: string; to: strin
   }
 }
 
+// 캘린더가 한 달치를 확보하기 위해 받아오는 건수.
+// 서버가 from/to를 지원하면 이 값과 아래 재필터링을 함께 지운다.
+const CALENDAR_FETCH_SIZE = 200
+
 /**
  * 캘린더에 점을 찍으려면 그 달의 공고가 전부 필요하다. 목록과 달리 페이지를 나누지 않고
  * 보고 있는 달만 통째로 받아온다.
+ *
+ * 백엔드 GET /api/campaigns는 아직 from/to/dateBasis를 받지 않는다. 파라미터는 그대로
+ * 보내되(서버가 지원하는 순간 그 필터가 먹는다), 응답을 한 번 더 보고 있는 달로 거른다.
+ * 이 재필터링이 없으면 어느 달을 넘겨도 같은 공고가 그려진다.
  */
 export function useRecruitmentCalendar(
   year: number,
@@ -176,25 +189,41 @@ export function useRecruitmentCalendar(
         publisher: params.publisher,
         categories: params.categories.length > 0 ? params.categories : undefined,
         types: params.types.length > 0 ? params.types : undefined,
-        withinDays: params.withinDays,
+        deadline: params.deadline,
         from,
         to,
         dateBasis: basis,
-        size: 200,
+        size: CALENDAR_FETCH_SIZE,
       }),
-    { content: EMPTY, page: 0, size: 200, totalElements: 0, totalPages: 0, hasNext: false },
+    {
+      content: EMPTY,
+      page: 0,
+      size: CALENDAR_FETCH_SIZE,
+      totalElements: 0,
+      totalPages: 0,
+      hasNext: false,
+    },
     [
       from,
       to,
       basis,
       params.query,
+      params.publisher,
       params.categories,
       params.types,
-      params.withinDays,
+      params.deadline,
     ],
   )
 
-  return { recruitments: result.data.content, status: result.status }
+  const recruitments = useMemo(() => {
+    const inMonth = result.data.content.filter((r) => {
+      const date = getDateByBasis(r, basis)
+      return Boolean(date) && date >= from && date <= to
+    })
+    return inMonth.length === 0 ? EMPTY : inMonth
+  }, [result.data.content, basis, from, to])
+
+  return { recruitments, status: result.status }
 }
 
 // ---------- 단건 ----------

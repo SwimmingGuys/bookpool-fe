@@ -29,7 +29,7 @@ export default function PublisherPage() {
   })
 
   const query: RecruitmentQuery = useMemo(
-    () => ({ query: '', categories: [], types: [], publisher, sort }),
+    () => ({ query: '', categories: [], types: [], deadline: 'all', publisher, sort }),
     [publisher, sort],
   )
 
@@ -70,7 +70,7 @@ export default function PublisherPage() {
         description={
           list.status === 'success' ? (
             <>
-              전체 {list.total}건
+              전체 {list.recruitments.length}건
               {openCount > 0 && (
                 <>
                   {' · '}

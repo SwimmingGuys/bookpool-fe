@@ -17,13 +17,11 @@ export const ENDPOINTS = {
   resetSendCode: '/password/email/code',
   resetVerify: '/password/email/verify',
   resetPassword: '/password/reset',
-  // 내 정보 조회 (MemberController)
+  // 내 정보 조회 · 프로필 수정 (MemberController: GET/PATCH /api/me)
   me: '/me',
   // 비밀번호 변경 (로그인 상태)
   changePassword: '/me/password',
-  // 프로필 수정 (명세 미확정 — 확인 후 조정)
-  updateProfile: '/members/me',
-  // 마케팅 수신 동의 토글
+  // 마케팅 수신 동의 토글 (MemberController: PATCH /api/me/email-subscription)
   emailSubscription: '/me/email-subscription',
 
   // 공고(캠페인)
@@ -55,8 +53,8 @@ export const ENDPOINTS = {
   reviews: '/reviews',
   adminReviews: '/admin/reviews',
 
-  // 이미지 업로드
-  uploads: '/uploads/images',
+  // 이미지 업로드 (관리자 전용이라 /admin 아래에 있다)
+  uploads: '/admin/uploads/images',
 } as const
 
 // 백엔드 공통 응답 래퍼 (kr.co.bookpool.common.response.ApiResult)
@@ -77,17 +75,43 @@ export interface PageResponse<T> {
   hasNext: boolean
 }
 
-// 백엔드 에러 코드 → 프론트 ApiErrorCode 매핑. 명세 추가 시 여기에 항목을 늘린다.
+// 백엔드 ErrorCode(kr.co.bookpool.common.exception.ErrorCode) → 프론트 ApiErrorCode 매핑.
+// 여기 없는 코드는 HTTP 상태로 폴백하므로, 상태만으로 구분되지 않는 것만 적어 두면 된다.
 const SERVER_CODE_MAP: Record<string, ApiErrorCode> = {
-  M001: 'EMAIL_EXISTS', // 이미 사용 중인 이메일 (회원가입)
-  M002: 'USER_NOT_FOUND', // 가입되지 않은 이메일 (비밀번호 재설정 코드 발송)
-  M004: 'CODE_INVALID', // 인증 코드가 올바르지 않거나 만료됨
-  M005: 'PASSWORD_INCORRECT', // 현재 비밀번호 불일치 (비밀번호 변경)
-  M006: 'EMAIL_NOT_VERIFIED', // 이메일 인증 미완료 (비밀번호 재설정)
-  A002: 'NOT_AUTHENTICATED', // 유효하지 않은 인증 정보
-  A003: 'FORBIDDEN', // 권한 없음
-  C001: 'VALIDATION', // 입력값 검증 실패 (data에 필드별 에러 배열)
-  C002: 'NOT_FOUND', // 리소스 없음
+  // Member
+  M001: 'EMAIL_EXISTS', // DUPLICATE_EMAIL — 이미 사용 중인 이메일 (409)
+  M002: 'USER_NOT_FOUND', // MEMBER_NOT_FOUND — 가입되지 않은 이메일 (404)
+  M003: 'EMAIL_NOT_VERIFIED', // EMAIL_NOT_VERIFIED — 회원가입 이메일 인증 미완료 (400)
+  M004: 'CODE_INVALID', // INVALID_VERIFICATION_CODE — 코드 불일치/만료 (400)
+  // M005는 백엔드에서 INVALID_CURRENT_PASSWORD와 PASSWORD_MISMATCH가 같은 코드를 쓴다.
+  // 둘 다 "현재 비밀번호 불일치"라 프론트 분기는 하나로 충분하다.
+  M005: 'PASSWORD_INCORRECT',
+  M006: 'EMAIL_NOT_VERIFIED', // PASSWORD_RESET_NOT_VERIFIED — 재설정 인증 미완료 (400)
+  // Auth
+  A001: 'INVALID_CREDENTIALS', // LOGIN_FAILED — 이메일/비밀번호 불일치 (401)
+  A002: 'NOT_AUTHENTICATED', // INVALID_TOKEN (401)
+  A003: 'NOT_AUTHENTICATED', // INVALID_REFRESH_TOKEN — 재로그인 필요 (401)
+  A004: 'FORBIDDEN', // ACCESS_DENIED (403)
+  // Common
+  C001: 'VALIDATION', // INVALID_INPUT_VALUE — data에 필드별 에러 배열 (400)
+  C002: 'SERVER', // METHOD_NOT_ALLOWED — 프론트가 잘못 호출한 것이라 사용자 문구는 서버 오류로 (405)
+  C003: 'SERVER', // INTERNAL_SERVER_ERROR (500)
+  // 리소스 없음 — 전부 404라 상태 폴백으로도 잡히지만, 의도를 남겨 둔다.
+  CP001: 'NOT_FOUND', // CAMPAIGN_NOT_FOUND
+  N001: 'NOT_FOUND', // NOTICE_NOT_FOUND
+  I001: 'NOT_FOUND', // INQUIRY_NOT_FOUND
+  B002: 'NOT_FOUND', // BOOKMARK_NOT_FOUND
+  B001: 'CONFLICT', // BOOKMARK_ALREADY_EXISTS — 이미 즐겨찾기한 공고 (409)
+  // Review
+  R001: 'NOT_FOUND', // REVIEW_NOT_FOUND
+  R002: 'CONFLICT', // REVIEW_ALREADY_EXISTS — 한 공고에 서평은 한 번만 (409)
+  R003: 'FORBIDDEN', // REVIEW_FORBIDDEN — 본인 서평만 수정/삭제 (403)
+  // Notification
+  NT001: 'NOT_FOUND', // NOTIFICATION_NOT_FOUND
+  // Upload
+  U001: 'VALIDATION', // UPLOAD_UNSUPPORTED_TYPE — 이미지가 아님 (400)
+  U002: 'VALIDATION', // UPLOAD_TOO_LARGE — 용량 초과 (400)
+  U003: 'SERVER', // UPLOAD_FAILED (500)
 }
 
 const KNOWN_CODES: ReadonlySet<ApiErrorCode> = new Set<ApiErrorCode>([
@@ -104,6 +128,7 @@ const KNOWN_CODES: ReadonlySet<ApiErrorCode> = new Set<ApiErrorCode>([
   'NETWORK',
   'NOT_FOUND',
   'FORBIDDEN',
+  'CONFLICT',
   'SERVER',
 ])
 
@@ -121,6 +146,7 @@ const DEFAULT_MESSAGES: Record<ApiErrorCode, string> = {
   NETWORK: '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
   NOT_FOUND: '요청한 정보를 찾을 수 없습니다.',
   FORBIDDEN: '접근 권한이 없습니다.',
+  CONFLICT: '이미 처리된 요청입니다.',
   SERVER: '서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.',
 }
 
@@ -281,7 +307,9 @@ function fallbackCode(status: number): ApiErrorCode {
     case 404:
       return 'NOT_FOUND'
     case 409:
-      return 'EMAIL_EXISTS'
+      // 409는 중복 이메일(M001)만이 아니라 중복 즐겨찾기(B001)에도 쓰인다.
+      // 코드가 없을 때 회원가입 문구를 띄우지 않도록 중립적인 값으로 떨어뜨린다.
+      return 'CONFLICT'
     default:
       return 'NETWORK'
   }
@@ -341,13 +369,16 @@ export async function apiRequest<T>(
 export async function apiUpload<T>(
   path: string,
   file: File,
-  fieldName = 'file',
+  options: { fieldName?: string; token?: string | null } = {},
 ): Promise<T> {
+  const { fieldName = 'file', token = null } = options
   const form = new FormData()
   form.append(fieldName, file)
 
   const headers: Record<string, string> = {}
-  if (accessToken) headers.Authorization = `Bearer ${accessToken}`
+  // 관리자 업로드는 관리자 토큰을 실어야 한다. 공용 accessToken을 쓰면 403이 난다.
+  const bearer = token ?? accessToken
+  if (bearer) headers.Authorization = `Bearer ${bearer}`
 
   let response: Response
   try {

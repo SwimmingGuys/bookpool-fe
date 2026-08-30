@@ -13,7 +13,12 @@ export type AuthErrorCode =
   | 'NETWORK'
 
 // 인증 외 도메인(공고·공지·문의·리뷰)에서 함께 쓰는 코드.
-export type ApiErrorCode = AuthErrorCode | 'NOT_FOUND' | 'FORBIDDEN' | 'SERVER'
+export type ApiErrorCode =
+  | AuthErrorCode
+  | 'NOT_FOUND'
+  | 'FORBIDDEN'
+  | 'CONFLICT'
+  | 'SERVER'
 
 // 백엔드 검증 실패(C001) 응답의 필드별 에러
 export interface FieldError {

@@ -1,7 +1,9 @@
 import { apiRequest, ENDPOINTS, type PageResponse } from '@/lib/api/client'
+import { CATEGORIES } from '@/types/recruitment'
 import type {
   BookFormat,
   Category,
+  DeadlineFilter,
   PublishStatus,
   Recruitment,
   RecruitmentSource,
@@ -55,12 +57,39 @@ const SOURCE_FROM_API: Record<string, RecruitmentSource> = {
   ETC: 'etc',
 }
 
+// 백엔드는 카테고리를 enum 이름으로 주고받는다.
+// 예전 응답(한국어 라벨)도 읽을 수 있도록 폴백 맵을 남겨 둔다.
+const CATEGORY_FROM_LABEL: Record<string, Category> = {
+  'IT/개발': 'IT',
+  경제: 'ECONOMY',
+  소설: 'NOVEL',
+  에세이: 'ESSAY',
+  '기획/디자인': 'PLANNING_DESIGN',
+  자기계발: 'SELF_DEVELOPMENT',
+  '인문/사회': 'HUMANITY',
+  '예술/디자인': 'ART_DESIGN',
+  '학습/교육': 'EDUCATION',
+  기타: 'ETC',
+}
+
+const CATEGORY_VALUES: ReadonlySet<string> = new Set(CATEGORIES)
+
+// 라벨이든 enum 이름이든 받아 도메인 값으로 정규화한다.
+// 백엔드가 응답 형식을 enum으로 바꿔도 그대로 동작한다.
+function toCategory(value: string | null | undefined): Category {
+  if (!value) return 'ETC'
+  const trimmed = value.trim()
+  if (CATEGORY_VALUES.has(trimmed)) return trimmed as Category
+  return CATEGORY_FROM_LABEL[trimmed] ?? 'ETC'
+}
+
 function toApiEnum(value: string): string {
   return value.toUpperCase()
 }
 
 // ---------- 검색 파라미터 ----------
 
+// 백엔드 SortKey와 1:1.
 export type CampaignSortKey = 'deadline' | 'popular' | 'latest'
 
 const SORT_TO_API: Record<CampaignSortKey, string> = {
@@ -69,13 +98,19 @@ const SORT_TO_API: Record<CampaignSortKey, string> = {
   latest: 'LATEST',
 }
 
+const DEADLINE_TO_API: Record<DeadlineFilter, string | undefined> = {
+  all: undefined,
+  week: 'WEEK',
+  imminent: 'IMMINENT',
+}
+
 export interface CampaignSearchParams {
   query?: string
+  // 출판사 정확 일치 (출판사 페이지)
   publisher?: string
-  categories?: readonly string[]
+  categories?: readonly Category[]
   types?: readonly RecruitmentType[]
-  // 마감까지 남은 일수 상한. 보드의 '이번 주(7)'·'마감 임박(3)' 필터에 대응한다.
-  withinDays?: number
+  deadline?: DeadlineFilter
   // 캘린더가 보고 있는 달만 받아오기 위한 날짜 범위 (basis 기준일의 from~to).
   from?: string
   to?: string
@@ -103,7 +138,7 @@ export interface RecruitmentInput {
   title: string
   bookTitle: string
   publisher: string
-  category: Category | string
+  category: Category
   badgeLabel: RecruitmentType
   recruitStartDate: string
   recruitEndDate: string
@@ -123,7 +158,8 @@ export interface RecruitmentInput {
 
 // ---------- 응답 매핑 ----------
 
-interface CampaignResponse {
+// 공고는 신청 기록처럼 다른 응답에도 중첩돼 오므로 타입과 매퍼를 공개한다.
+export interface CampaignResponse {
   id: string | number
   type?: string | null
   badgeLabel?: RecruitmentType | null
@@ -171,7 +207,7 @@ function resolveDaysRemaining(
   return Math.ceil((end - now) / 86_400_000)
 }
 
-function toRecruitment(response: CampaignResponse): Recruitment {
+export function toRecruitment(response: CampaignResponse): Recruitment {
   const recruitEndDate = toIsoDay(response.recruitEndDate ?? response.deadlineAt)
   const daysRemaining = resolveDaysRemaining(response, recruitEndDate)
   const badgeLabel =
@@ -186,7 +222,7 @@ function toRecruitment(response: CampaignResponse): Recruitment {
     title: response.title,
     bookTitle: response.bookTitle,
     publisher: response.publisherName ?? response.publisher ?? '',
-    category: response.category,
+    category: toCategory(response.category),
     viewCount: response.viewCount ?? 0,
     status:
       (response.status?.toLowerCase() as RecruitmentStatus | undefined) ??
@@ -249,14 +285,17 @@ function toCampaignPayload(input: RecruitmentInput, status?: RecruitmentStatus) 
 export async function listCampaigns(
   params: CampaignSearchParams = {},
 ): Promise<PageResponse<Recruitment>> {
+  // 출판사 전용 파라미터가 없어 자유 검색어로 대신 넘긴다. 검색어와 출판사가
+  // 함께 오는 화면은 없으므로 둘 중 하나만 실린다.
+  const searchQuery = params.query || params.publisher || undefined
+
   const page = await apiRequest<PageResponse<CampaignResponse>>(ENDPOINTS.campaigns, {
     auth: false,
     query: {
-      query: params.query,
-      publisher: params.publisher,
+      query: searchQuery,
       categories: params.categories,
       types: params.types?.map((t) => TYPE_TO_API[t]),
-      withinDays: params.withinDays,
+      deadline: params.deadline ? DEADLINE_TO_API[params.deadline] : undefined,
       from: params.from,
       to: params.to,
       dateBasis: params.dateBasis ? DATE_BASIS_TO_API[params.dateBasis] : undefined,
@@ -265,7 +304,13 @@ export async function listCampaigns(
       size: params.size ?? DEFAULT_PAGE_SIZE,
     },
   })
-  return { ...page, content: page.content.map(toRecruitment) }
+
+  const content = page.content.map(toRecruitment)
+  if (!params.publisher) return { ...page, content }
+
+  // LIKE 검색이라 '문학동네'로 '문학동네어린이'까지 딸려온다. 정확히 같은 곳만 남긴다.
+  const exact = content.filter((r) => r.publisher === params.publisher)
+  return { ...page, content: exact, totalElements: exact.length }
 }
 
 export async function getCampaign(id: string): Promise<Recruitment> {
@@ -280,7 +325,14 @@ export async function listPublishers(): Promise<string[]> {
   return apiRequest<string[]>(ENDPOINTS.campaignPublishers, { auth: false })
 }
 
-// 홈 카테고리 타일의 '모집중 n건'. 목록을 전부 받아 세지 않도록 집계만 받아온다.
+/**
+ * 홈 카테고리 타일의 '모집중 n건'.
+ *
+ * 백엔드가 집계 엔드포인트를 제공하므로 한 번만 호출한다.
+ * 예전에는 카테고리마다 size=1로 물어봤는데, 요청이 카테고리 수만큼 나갔고
+ * 목록 API에 모집중 필터가 없어 마감된 공고까지 세어졌다.
+ * 서버는 게시(PUBLISHED)되고 모집중(OPEN)인 공고만 센다.
+ */
 export async function listCategoryCounts(): Promise<Record<string, number>> {
   const rows = await apiRequest<{ category: string; count: number }[]>(
     ENDPOINTS.campaignCategoryCounts,
@@ -317,6 +369,19 @@ export async function listAdminCampaigns(
     },
   )
   return { ...page, content: page.content.map(toRecruitment) }
+}
+
+// 백오피스 단건 조회. 공개 API(getCampaign)는 게시된 공고만 돌려주고 조회수까지 올리므로,
+// 검수 대기 공고를 수정하려면 관리자 엔드포인트를 써야 한다.
+export async function getAdminCampaign(
+  id: string,
+  token?: string | null,
+): Promise<Recruitment> {
+  return toRecruitment(
+    await apiRequest<CampaignResponse>(`${ENDPOINTS.adminCampaigns}/${id}`, {
+      token,
+    }),
+  )
 }
 
 export async function createAdminCampaign(
