@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAdminAuth } from '@/lib/adminAuth'
 import { AdminAuthError } from '@/lib/api/adminAuth'
 import { showToast } from '@/lib/toast'
@@ -16,7 +16,7 @@ function sanitizeRedirect(raw: string | null): string {
 
 export default function AdminLoginPage() {
   useDocumentTitle('관리자 로그인')
-  const { login } = useAdminAuth()
+  const { login, isAdminLoggedIn } = useAdminAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirect = sanitizeRedirect(searchParams.get('redirect'))
@@ -24,6 +24,10 @@ export default function AdminLoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // 이미 관리자 권한이 있는 세션이면 로그인 화면을 보여줄 이유가 없다.
+  // (관리자 계정으로 서비스에 로그인한 뒤 이 주소로 들어온 경우)
+  if (isAdminLoggedIn) return <Navigate to={redirect} replace />
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -25,10 +25,16 @@ const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
   )
 
 export default function AdminLayout() {
-  const { admin, logout } = useAdminAuth()
+  const { admin, logout, linkedToUserSession } = useAdminAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
+  // 사용자 세션을 이어받아 들어온 경우엔 여기서 끊을 관리자 세션이 없다.
+  // 로그아웃 대신 서비스 화면으로 나가고, 로그아웃은 서비스 헤더에 맡긴다.
+  const handleExit = () => {
+    if (linkedToUserSession) {
+      navigate('/', { replace: true })
+      return
+    }
     logout()
     showToast('로그아웃되었습니다.', 'success')
     navigate('/admin/login', { replace: true })
@@ -65,11 +71,13 @@ export default function AdminLayout() {
               </span>
               <button
                 type="button"
-                onClick={handleLogout}
+                onClick={handleExit}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">로그아웃</span>
+                <span className="hidden sm:inline">
+                  {linkedToUserSession ? '서비스로 나가기' : '로그아웃'}
+                </span>
               </button>
             </div>
           </div>

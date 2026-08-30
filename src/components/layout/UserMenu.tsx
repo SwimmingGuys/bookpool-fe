@@ -1,6 +1,14 @@
 import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, UserCog, ClipboardList, Bell, Headphones, LogOut } from 'lucide-react'
+import {
+  User,
+  UserCog,
+  ClipboardList,
+  Bell,
+  Headphones,
+  LogOut,
+  ShieldCheck,
+} from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useAuth } from '@/lib/auth'
 import { showToast } from '@/lib/toast'
@@ -22,6 +30,11 @@ export default function UserMenu() {
   useDismissOnOutside(ref, open, close)
 
   if (!user) return null
+
+  // 관리자 계정에만 백오피스 입구를 보여준다. 링크가 없으면 /admin 주소를 아는 사람만
+  // 들어갈 수 있어, 공고를 직접 등록할 방법이 화면에 전혀 드러나지 않았다.
+  // 관리자 세션은 사용자 세션과 분리돼 있어 여기서 눌러도 관리자 로그인을 한 번 더 거친다.
+  const isAdmin = user.role === 'ADMIN'
 
   const handleLogout = () => {
     logout()
@@ -74,6 +87,18 @@ export default function UserMenu() {
               </Link>
             ))}
           </div>
+
+          {isAdmin && (
+            <Link
+              to="/admin/recruitments"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 border-t border-stone-100 px-4 py-2.5 text-sm font-semibold text-stone-700 no-underline transition-colors hover:bg-stone-50"
+            >
+              <ShieldCheck className="w-4 h-4 text-stone-500" />
+              관리자 페이지
+            </Link>
+          )}
 
           <button
             type="button"

@@ -3,7 +3,7 @@ import type { PublishStatus, Recruitment, RecruitmentStatus } from '@/types/recr
 import {
   createAdminCampaign,
   deleteAdminCampaign,
-  getCampaign,
+  getAdminCampaign,
   listAdminCampaigns,
   setCampaignPublishStatus,
   setCampaignStatus,
@@ -55,7 +55,7 @@ export function useAdminRecruitment(id: string | undefined): {
   error: Error | null
 } {
   const result = useAsyncData<Recruitment | null>(
-    () => (id ? getCampaign(id) : Promise.resolve(null)),
+    () => (id ? getAdminCampaign(id, getAdminToken()) : Promise.resolve(null)),
     null,
     [id],
   )
