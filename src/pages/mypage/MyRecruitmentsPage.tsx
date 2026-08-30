@@ -30,7 +30,7 @@ const TABS = [
   { value: 'applications', label: '신청한 공고', icon: ClipboardCheck },
   { value: 'recent', label: '최근에 본 공고', icon: Clock },
   { value: 'favorites', label: '즐겨찾기', icon: Star },
-  { value: 'reviews', label: '내 서평', icon: MessageSquareQuote },
+  { value: 'reviews', label: '내 후기', icon: MessageSquareQuote },
 ] as const
 type TabValue = (typeof TABS)[number]['value']
 
@@ -61,7 +61,7 @@ export default function MyRecruitmentsPage() {
   const myReviews = useMyReviews()
   const { appliedIds } = useAppliedCampaigns()
 
-  // 신청 → 발표 → 서평 순서라 신청한 공고를 첫 탭으로 둔다.
+  // 신청 → 발표 → 후기 순서라 신청한 공고를 첫 탭으로 둔다.
   const [activeTab, setActiveTab] = useState<TabValue>('applications')
 
   const totalCounts: Record<TabValue, number> = {
@@ -165,7 +165,7 @@ function MyReviewsTab({
   if (status === 'error') {
     return (
       <div className="mt-5">
-        <ErrorState title="서평을 불러오지 못했습니다." onRetry={onRetry} />
+        <ErrorState title="후기를 불러오지 못했습니다." onRetry={onRetry} />
       </div>
     )
   }
@@ -174,13 +174,13 @@ function MyReviewsTab({
     return (
       <div className="mt-5">
         <EmptyState
-          title="아직 제출한 서평이 없어요."
+          title="아직 남긴 후기가 없어요."
           description={
             <Link
               to="/board"
               className="text-orange-600 no-underline hover:text-orange-700"
             >
-              참여한 모집에서 서평을 남겨보세요
+              참여한 모집에 후기를 남겨보세요
             </Link>
           }
         />
@@ -226,6 +226,9 @@ function MyReviewsTab({
           {review.rejectReason && (
             <p className="mt-2 text-xs text-red-500">
               반려 사유: {review.rejectReason}
+              <span className="ml-1 text-stone-400">
+                — 공고에서는 숨겨집니다. 내용을 고치면 다시 노출돼요.
+              </span>
             </p>
           )}
 

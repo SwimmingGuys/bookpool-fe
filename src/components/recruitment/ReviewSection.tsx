@@ -46,9 +46,13 @@ function isValidUrl(value: string): boolean {
 }
 
 /**
- * 공고에 달린 서평 목록과 제출 폼.
- * 서평은 이 플랫폼의 최종 산출물인데 그동안 관리자만 대신 입력할 수 있었다.
- * 참여자가 직접 원문 링크를 제출하고, 관리자가 인증하는 흐름으로 바꿨다.
+ * 공고에 달린 참여 후기 목록과 작성 폼.
+ *
+ * 책에 대한 서평이 아니라 **이 모집에 참여한 경험**을 남기는 곳이다.
+ * 책 서평의 원본은 블로그·예스24 같은 외부 채널에 있고 여기에 옮겨 적을 이유가 없다.
+ * 반면 '발표가 공고대로 났는지, 책이 언제 왔는지, 조건이 달랐는지'는 어디에도 남지
+ * 않는 정보이고, 공고를 수집해 오는 이 서비스가 유일하게 쌓을 수 있는 값이다.
+ * 그래서 별점은 책이 아니라 모집 진행을 향하고, 서평 원문 링크는 선택이다.
  */
 export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
   const { isLoggedIn } = useAuth()
@@ -82,23 +86,31 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!content.trim()) {
-      setFormError('서평 내용을 입력해주세요.')
+      setFormError('후기 내용을 입력해주세요.')
       return
     }
-    if (!isValidUrl(url.trim())) {
+    // 원문 링크는 선택. 적었다면 형식만 확인한다.
+    const trimmedUrl = url.trim()
+    if (trimmedUrl && !isValidUrl(trimmedUrl)) {
       setFormError('서평 원문 주소를 http(s):// 형식으로 입력해주세요.')
       return
     }
     setFormError(null)
     setSubmitting(true)
     try {
-      await submit({ recruitmentId, rating, content, channel, url })
+      await submit({
+        recruitmentId,
+        rating,
+        content,
+        channel: trimmedUrl ? channel : undefined,
+        url: trimmedUrl || undefined,
+      })
       resetForm()
       setOpen(false)
-      showToast('서평을 제출했습니다. 확인 후 노출됩니다.', 'success')
+      showToast('후기를 남겼습니다.', 'success')
     } catch (err) {
       if (err instanceof AuthError) setFormError(err.message)
-      else setFormError('서평 제출에 실패했습니다.')
+      else setFormError('후기 등록에 실패했습니다.')
     } finally {
       setSubmitting(false)
     }
@@ -109,7 +121,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <h2 className="text-base font-semibold text-stone-800">
-            서평
+            참여 후기
             <span className="ml-2 text-sm font-bold text-orange-500">
               {reviews.length}
             </span>
@@ -131,7 +143,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
               size="sm"
               onClick={() => setOpen((prev) => !prev)}
             >
-              {open ? '취소' : '서평 등록'}
+              {open ? '취소' : '후기 남기기'}
             </Button>
           )
         ) : (
@@ -139,7 +151,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
             to="/login"
             className="text-xs font-medium text-stone-500 no-underline hover:text-orange-600"
           >
-            로그인하고 서평 등록
+            로그인하고 후기 남기기
           </Link>
         )}
       </div>
@@ -152,7 +164,9 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
         >
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-stone-700">별점</span>
+              <span className="text-xs font-semibold text-stone-700">
+                모집 만족도
+              </span>
               <StarRating value={rating} onChange={setRating} size="md" />
             </div>
 
@@ -161,7 +175,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
                 htmlFor="review-channel"
                 className="text-xs font-semibold text-stone-700"
               >
-                채널
+                서평 채널
               </label>
               <select
                 id="review-channel"
@@ -180,8 +194,27 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
           </div>
 
           <div className="mt-3 flex flex-col gap-1.5">
+            <label
+              htmlFor="review-content"
+              className="text-xs font-semibold text-stone-700"
+            >
+              참여 후기
+            </label>
+            <textarea
+              id="review-content"
+              rows={3}
+              placeholder="발표는 제때 났는지, 책은 언제 왔는지, 조건이 공고와 달랐는지 알려주세요."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              disabled={submitting}
+              className={cn(inputClass, 'resize-y')}
+            />
+          </div>
+
+          <div className="mt-3 flex flex-col gap-1.5">
             <label htmlFor="review-url" className="text-xs font-semibold text-stone-700">
               서평 원문 주소
+              <span className="ml-1 font-normal text-stone-400">선택</span>
             </label>
             <input
               id="review-url"
@@ -193,24 +226,9 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
               disabled={submitting}
               className={inputClass}
             />
-          </div>
-
-          <div className="mt-3 flex flex-col gap-1.5">
-            <label
-              htmlFor="review-content"
-              className="text-xs font-semibold text-stone-700"
-            >
-              한 줄 요약
-            </label>
-            <textarea
-              id="review-content"
-              rows={3}
-              placeholder="어떤 점이 좋았는지 짧게 남겨주세요."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              disabled={submitting}
-              className={cn(inputClass, 'resize-y')}
-            />
+            <p className="text-xs text-stone-400">
+              올린 서평이 있다면 링크를 남겨주세요. 다른 참여자에게 도움이 됩니다.
+            </p>
           </div>
 
           {formError && (
@@ -219,7 +237,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
 
           <div className="mt-4 flex justify-end">
             <Button type="submit" size="sm" disabled={submitting}>
-              {submitting ? '제출 중...' : '서평 제출'}
+              {submitting ? '등록 중...' : '후기 남기기'}
             </Button>
           </div>
         </form>
@@ -239,7 +257,7 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
 
       {status === 'error' && (
         <ErrorState
-          title="서평을 불러오지 못했습니다."
+          title="후기를 불러오지 못했습니다."
           description={error?.message}
           onRetry={reload}
         />
@@ -248,8 +266,8 @@ export default function ReviewSection({ recruitmentId }: ReviewSectionProps) {
       {status === 'success' && reviews.length === 0 && (
         <EmptyState
           icon={MessageSquareQuote}
-          title="아직 등록된 서평이 없어요."
-          description="첫 서평을 남겨보세요."
+          title="아직 참여 후기가 없어요."
+          description="이 모집에 참여하셨다면 첫 후기를 남겨주세요."
         />
       )}
 
@@ -270,14 +288,16 @@ function ReviewRow({ review }: { review: Review }) {
       <div className="flex flex-wrap items-center gap-2">
         <StarRating value={review.rating} />
         <span className="text-sm font-semibold text-stone-700">{review.author}</span>
-        {review.isMine && review.submissionStatus !== 'approved' && (
+        {/* 후기는 바로 노출되므로 '확인 전'은 알릴 것이 없다.
+            관리자가 서평 원문을 확인해 준 건에만 신뢰 표시를 단다. */}
+        {review.submissionStatus === 'approved' && (
           <span
             className={cn(
               'rounded-full px-2 py-0.5 text-xs font-semibold',
-              statusStyles[review.submissionStatus],
+              statusStyles.approved,
             )}
           >
-            {REVIEW_SUBMISSION_STATUS_LABELS[review.submissionStatus]}
+            {REVIEW_SUBMISSION_STATUS_LABELS.approved}
           </span>
         )}
         <span className="ml-auto text-xs text-stone-400">

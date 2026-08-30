@@ -6,7 +6,7 @@ import PageContainer from '@/components/layout/PageContainer'
 // 그동안 마이페이지 하위 화면은 사용자 메뉴 드롭다운으로만 갈 수 있었다.
 const TABS = [
   { to: '/mypage/account', label: '계정', icon: UserCog },
-  { to: '/mypage/recruitments', label: '공고 · 서평', icon: ClipboardList },
+  { to: '/mypage/recruitments', label: '공고 · 후기', icon: ClipboardList },
   { to: '/mypage/notifications', label: '알림 설정', icon: Bell },
 ]
 

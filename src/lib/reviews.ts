@@ -19,7 +19,7 @@ export interface ReviewListResult {
   reload: () => void
 }
 
-// 공고 상세에 노출되는 서평 목록
+// 공고 상세에 노출되는 참여 후기 목록
 export function useCampaignReviews(campaignId: string | undefined): ReviewListResult {
   const result = useAsyncData(
     () => (campaignId ? listReviewsByCampaign(campaignId) : Promise.resolve(EMPTY)),
@@ -34,7 +34,7 @@ export function useCampaignReviews(campaignId: string | undefined): ReviewListRe
   }
 }
 
-// 마이페이지의 '내 서평'
+// 마이페이지의 '내 후기'
 export function useMyReviews(): ReviewListResult {
   const { user } = useAuth()
   const userId = user?.id ?? null

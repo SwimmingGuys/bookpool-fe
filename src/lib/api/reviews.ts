@@ -60,7 +60,7 @@ function toReview(response: ReviewResponse): Review {
 
 // ---------- 공개 ----------
 
-// 공고 상세에 노출되는 서평 목록 (visible + approved만 내려온다)
+// 공고 상세에 노출되는 참여 후기 목록 (visible + approved만 내려온다)
 export async function listReviewsByCampaign(campaignId: string): Promise<Review[]> {
   const page = await apiRequest<PageResponse<ReviewResponse>>(ENDPOINTS.reviews, {
     auth: false,
@@ -69,7 +69,7 @@ export async function listReviewsByCampaign(campaignId: string): Promise<Review[
   return page.content.map(toReview)
 }
 
-// ---------- 사용자 (서평 제출) ----------
+// ---------- 사용자 (참여 후기 등록) ----------
 
 export async function submitReview(input: ReviewSubmissionInput): Promise<Review> {
   return toReview(
@@ -79,11 +79,17 @@ export async function submitReview(input: ReviewSubmissionInput): Promise<Review
         campaignId: Number(input.recruitmentId),
         rating: input.rating,
         content: input.content.trim(),
-        channel: input.channel.toUpperCase(),
-        url: input.url.trim(),
+        ...toLinkPayload(input),
       },
     }),
   )
+}
+
+// 서평 링크는 선택이라 비어 있으면 필드를 보내지 않는다.
+function toLinkPayload(input: Pick<ReviewSubmissionInput, 'channel' | 'url'>) {
+  const url = input.url?.trim()
+  if (!url) return { channel: null, url: null }
+  return { channel: input.channel?.toUpperCase() ?? null, url }
 }
 
 export async function updateMyReview(
@@ -96,8 +102,7 @@ export async function updateMyReview(
       body: {
         rating: input.rating,
         content: input.content.trim(),
-        channel: input.channel.toUpperCase(),
-        url: input.url.trim(),
+        ...toLinkPayload(input),
       },
     }),
   )
@@ -107,7 +112,7 @@ export async function deleteMyReview(id: string): Promise<void> {
   await apiRequest<void>(`${ENDPOINTS.reviews}/${id}`, { method: 'DELETE' })
 }
 
-// 내가 제출한 서평 목록 (마이페이지)
+// 내가 남긴 후기 목록 (마이페이지)
 export async function listMyReviews(): Promise<Review[]> {
   const page = await apiRequest<PageResponse<ReviewResponse>>(
     `${ENDPOINTS.reviews}/me`,
