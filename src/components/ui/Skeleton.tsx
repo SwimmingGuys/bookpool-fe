@@ -38,3 +38,32 @@ export function RecruitmentGridSkeleton({ count = 6 }: { count?: number }) {
     </div>
   )
 }
+
+// 전체 모집 목록의 한 줄 자리. 행 레이아웃과 높이를 맞춰 로딩 후 화면이 튀지 않게 한다.
+export function RecruitmentRowSkeleton() {
+  return (
+    <div className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-4 sm:gap-6 sm:p-5">
+      <div className="min-w-0 flex-1">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="mt-2 h-4 w-3/5" />
+        <Skeleton className="mt-2 h-3 w-2/5" />
+        <Skeleton className="mt-3 h-3 w-44" />
+      </div>
+      <div className="hidden w-28 shrink-0 flex-col gap-1.5 sm:flex">
+        <Skeleton className="h-5 w-14 rounded-full" />
+        <Skeleton className="h-3 w-16" />
+      </div>
+      <Skeleton className="h-3 w-14 shrink-0" />
+    </div>
+  )
+}
+
+export function RecruitmentRowListSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <RecruitmentRowSkeleton key={i} />
+      ))}
+    </div>
+  )
+}

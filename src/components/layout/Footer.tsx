@@ -9,7 +9,8 @@ const SUPPORT_LINKS = [
 
 const BROWSE_LINKS = [
   { to: '/', label: '홈' },
-  { to: '/board', label: '모집 보드' },
+  { to: '/calendar', label: '모집 달력' },
+  { to: '/board', label: '전체 모집 목록' },
 ]
 
 export default function Footer() {

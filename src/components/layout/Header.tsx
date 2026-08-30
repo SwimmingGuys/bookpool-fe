@@ -9,7 +9,10 @@ import UserMenu from './UserMenu'
 
 // 헤더에는 서비스를 쓰는 흐름만 둔다.
 // 공지사항·문의는 도움말에 가까워 푸터로 옮겼다.
-const NAV_LINKS = [{ to: '/board', label: '보드' }]
+const NAV_LINKS = [
+  { to: '/calendar', label: '모집 달력' },
+  { to: '/board', label: '전체 모집 목록' },
+]
 
 // 모바일 메뉴에서는 헤더에 없는 도움말 링크도 함께 노출한다.
 const MOBILE_SUPPORT_LINKS = [

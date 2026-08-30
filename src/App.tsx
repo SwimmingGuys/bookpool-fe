@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from '@/components/layout/Layout'
 import HomePage from '@/pages/HomePage'
 import BoardPage from '@/pages/BoardPage'
+import CalendarPage from '@/pages/CalendarPage'
 import RecruitmentDetailPage from '@/pages/RecruitmentDetailPage'
 import PublisherPage from '@/pages/PublisherPage'
 import NoticePage from '@/pages/NoticePage'
@@ -53,6 +54,7 @@ function App() {
         </Route>
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/board" element={<BoardPage />} />
           <Route path="/recruitments/:id" element={<RecruitmentDetailPage />} />
           <Route path="/publishers/:name" element={<PublisherPage />} />
