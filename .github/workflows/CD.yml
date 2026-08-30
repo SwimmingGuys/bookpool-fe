@@ -1,0 +1,97 @@
+name: Bookpool FE CD
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag (commit SHA)
+        id: meta
+        run: echo "image_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.image_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Restart web on server
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: IMAGE_TAG,GH_ACTOR,GH_TOKEN
+          script: |
+            set -e
+            cd /bookpool
+
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+
+            # .env.images 에서 자기 키(WEB_IMAGE_TAG)만 갈아끼운다.
+            # 백엔드 CD가 같은 파일의 APP_IMAGE_TAG 를 쓰므로 서로 덮어쓰면 안 된다.
+            umask 077
+            touch .env.images
+            grep -v '^WEB_IMAGE_TAG=' .env.images > .env.images.tmp || true
+            echo "WEB_IMAGE_TAG=$IMAGE_TAG" >> .env.images.tmp
+            mv .env.images.tmp .env.images
+
+            set -a
+            source .env
+            source .env.images
+            set +a
+
+            docker compose pull web
+            docker compose up -d web
+
+            # 헬스체크 대기
+            for i in $(seq 1 30); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' bookpool-web 2>/dev/null || echo starting)
+              [ "$status" = "healthy" ] && { echo "web is healthy."; break; }
+              sleep 2
+            done
+
+            docker image prune -f
+            docker logout ghcr.io || true

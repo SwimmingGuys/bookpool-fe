@@ -1,0 +1,10 @@
+.git
+.github
+node_modules
+dist
+.vercel
+.vite
+.playwright-mcp
+.claude
+*.md
+.env*
