@@ -2,6 +2,9 @@ export type RecruitmentType = 'Reviewer' | 'Beta Reader'
 
 export type RecruitmentStatus = 'open' | 'closed'
 
+// 마감 조건 필터. 백엔드 DeadlineFilter(ALL/WEEK/IMMINENT)와 1:1이다.
+export type DeadlineFilter = 'all' | 'week' | 'imminent'
+
 export const RECRUITMENT_TYPE_LABELS: Record<RecruitmentType, string> = {
   Reviewer: '서평단',
   'Beta Reader': '베타리더',
@@ -12,19 +15,45 @@ export const RECRUITMENT_TYPE_OPTIONS: { value: RecruitmentType; label: string }
   { value: 'Beta Reader', label: RECRUITMENT_TYPE_LABELS['Beta Reader'] },
 ]
 
+// 값 공간은 백엔드 CampaignCategory와 1:1이다. 예전엔 한국어 라벨을 그대로 값으로 써서
+// 필터 쿼리(`categories=IT/개발`)가 서버에서 enum 변환에 실패했다.
+// 화면에 보이는 문구는 CATEGORY_LABELS로만 만든다.
 export const CATEGORIES = [
-  'IT/개발',
-  '소설',
-  '경제',
-  '에세이',
-  '기획/디자인',
-  '자기계발',
-  '인문/사회',
-  '예술/디자인',
-  '학습/교육',
+  'IT',
+  'NOVEL',
+  'ECONOMY',
+  'ESSAY',
+  'PLANNING_DESIGN',
+  'SELF_DEVELOPMENT',
+  'HUMANITY',
+  'ART_DESIGN',
+  'EDUCATION',
+  'ETC',
 ] as const
 
 export type Category = (typeof CATEGORIES)[number]
+
+// 라벨 문구는 백엔드 CampaignCategory의 label과 맞춰 둔다.
+export const CATEGORY_LABELS: Record<Category, string> = {
+  IT: 'IT/개발',
+  NOVEL: '소설',
+  ECONOMY: '경제',
+  ESSAY: '에세이',
+  PLANNING_DESIGN: '기획/디자인',
+  SELF_DEVELOPMENT: '자기계발',
+  HUMANITY: '인문/사회',
+  ART_DESIGN: '예술/디자인',
+  EDUCATION: '학습/교육',
+  ETC: '기타',
+}
+
+export const CATEGORY_OPTIONS: { value: Category; label: string }[] = CATEGORIES.map(
+  (value) => ({ value, label: CATEGORY_LABELS[value] }),
+)
+
+export function categoryLabel(value: Category | string): string {
+  return CATEGORY_LABELS[value as Category] ?? value
+}
 
 // ---------- 모집 조건 ----------
 
@@ -101,7 +130,7 @@ export interface Recruitment {
   title: string
   bookTitle: string
   publisher: string
-  category: Category | string
+  category: Category
   viewCount: number
   status: RecruitmentStatus
   recruitStartDate: string

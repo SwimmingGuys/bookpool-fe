@@ -1,6 +1,7 @@
 import { apiRequest, ENDPOINTS, type PageResponse } from '@/lib/api/client'
 import type { NotificationSubscription } from '@/types/notification'
-import type { RecruitmentType } from '@/types/recruitment'
+import { CATEGORIES } from '@/types/recruitment'
+import type { Category, RecruitmentType } from '@/types/recruitment'
 
 // ---------- 구독 설정 ----------
 
@@ -20,13 +21,17 @@ const TYPE_TO_API: Record<RecruitmentType, string> = {
   'Beta Reader': 'BETA_READER',
 }
 
+// 구독 설정은 백엔드가 문자열 배열을 그대로 저장한다. 값 공간이 바뀌기 전에 저장된
+// 항목(한국어 라벨 등)이 섞여 있을 수 있어, 아는 값만 남긴다.
+const CATEGORY_VALUES: ReadonlySet<string> = new Set(CATEGORIES)
+
 function toSubscription(response: SubscriptionResponse): NotificationSubscription {
   return {
     types: (response.types ?? [])
       .map((t) => TYPE_FROM_API[t] ?? (t as RecruitmentType))
       .filter((t): t is RecruitmentType => t === 'Reviewer' || t === 'Beta Reader'),
-    categories: (response.categories ?? []).filter(
-      (c): c is string => typeof c === 'string',
+    categories: (response.categories ?? []).filter((c): c is Category =>
+      CATEGORY_VALUES.has(c),
     ),
     publishers: (response.publishers ?? []).filter(
       (p): p is string => typeof p === 'string',

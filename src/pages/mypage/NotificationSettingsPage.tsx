@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Bell, Mail, Pencil } from 'lucide-react'
 import {
-  CATEGORIES,
+  categoryLabel,
+  CATEGORY_OPTIONS,
   RECRUITMENT_TYPE_LABELS,
   RECRUITMENT_TYPE_OPTIONS,
+  type Category,
   type RecruitmentType,
 } from '@/types/recruitment'
 import { listPublishers } from '@/lib/api/campaigns'
@@ -111,7 +113,7 @@ export default function NotificationSettingsPage() {
 
   const handleToggleType = (type: RecruitmentType) =>
     setDraft((p) => ({ ...p, types: toggleInArray(p.types, type) }))
-  const handleToggleCategory = (cat: string) =>
+  const handleToggleCategory = (cat: Category) =>
     setDraft((p) => ({ ...p, categories: toggleInArray(p.categories, cat) }))
   const handleTogglePublisher = (pub: string) =>
     setDraft((p) => ({ ...p, publishers: toggleInArray(p.publishers, pub) }))
@@ -177,18 +179,18 @@ export default function NotificationSettingsPage() {
         >
           {isEditing ? (
             <ChipRow>
-              {CATEGORIES.map((cat) => (
+              {CATEGORY_OPTIONS.map((opt) => (
                 <Chip
-                  key={cat}
-                  selected={draft.categories.includes(cat)}
-                  onClick={() => handleToggleCategory(cat)}
+                  key={opt.value}
+                  selected={draft.categories.includes(opt.value)}
+                  onClick={() => handleToggleCategory(opt.value)}
                 >
-                  {cat}
+                  {opt.label}
                 </Chip>
               ))}
             </ChipRow>
           ) : (
-            <SelectedPills items={[...saved.categories]} />
+            <SelectedPills items={saved.categories.map(categoryLabel)} />
           )}
         </SectionCard>
 

@@ -6,10 +6,12 @@ import ImageUpload from '@/components/admin/ImageUpload'
 import {
   BOOK_FORMAT_OPTIONS,
   CATEGORIES,
+  CATEGORY_OPTIONS,
   RECRUITMENT_SOURCE_OPTIONS,
   RECRUITMENT_TYPE_OPTIONS,
   REVIEW_CHANNEL_OPTIONS,
   type BookFormat,
+  type Category,
   type PublishStatus,
   type RecruitmentSource,
   type RecruitmentType,
@@ -56,7 +58,7 @@ export default function RecruitmentForm({
   const [title, setTitle] = useState(initial?.title ?? '')
   const [bookTitle, setBookTitle] = useState(initial?.bookTitle ?? '')
   const [publisher, setPublisher] = useState(initial?.publisher ?? '')
-  const [category, setCategory] = useState<string>(initial?.category ?? CATEGORIES[0])
+  const [category, setCategory] = useState<Category>(initial?.category ?? CATEGORIES[0])
   const [badgeLabel, setBadgeLabel] = useState<RecruitmentType>(
     initial?.badgeLabel ?? 'Reviewer',
   )
@@ -207,9 +209,9 @@ export default function RecruitmentForm({
           id={`${baseId}-category`}
           label="카테고리"
           value={category}
-          onChange={setCategory}
+          onChange={(v) => setCategory(v as Category)}
           disabled={submitting}
-          options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+          options={CATEGORY_OPTIONS}
         />
         <Select
           id={`${baseId}-type`}

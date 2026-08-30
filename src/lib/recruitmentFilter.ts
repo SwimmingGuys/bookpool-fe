@@ -1,11 +1,17 @@
-import type { Recruitment, RecruitmentType } from '@/types/recruitment'
+import { categoryLabel } from '@/types/recruitment'
+import type {
+  Category,
+  DeadlineFilter,
+  Recruitment,
+  RecruitmentType,
+} from '@/types/recruitment'
 import type { CampaignSortKey } from '@/lib/api/campaigns'
 
-export type DeadlineFilter = 'all' | 'week' | 'imminent'
+export type { DeadlineFilter } from '@/types/recruitment'
 
 export interface RecruitmentFilter {
   query: string
-  categories: string[]
+  categories: Category[]
   types: RecruitmentType[]
   deadline: DeadlineFilter
 }
@@ -35,8 +41,8 @@ export function validateQuery(raw: string): QueryValidation {
   return { ok: true, query: trimmed }
 }
 
-// 마감 조건 → 서버에 넘길 '남은 일수 상한'.
-// 필터링 자체는 서버가 하므로 프론트는 값만 변환한다.
+// 마감 조건 → '남은 일수 상한'. 서버는 deadline=WEEK|IMMINENT를 그대로 받으므로
+// 이 변환은 클라이언트에서 거르는 경우(즐겨찾기 보기)에만 쓴다.
 export function deadlineToWithinDays(deadline: DeadlineFilter): number | undefined {
   switch (deadline) {
     case 'week':
@@ -61,7 +67,7 @@ export function filterRecruitments(
 
   return recruitments.filter((r) => {
     if (q.length > 0) {
-      const haystack = [r.title, r.bookTitle, r.publisher, r.category]
+      const haystack = [r.title, r.bookTitle, r.publisher, categoryLabel(r.category)]
         .join(' ')
         .toLowerCase()
       if (!haystack.includes(q)) return false
@@ -79,6 +85,7 @@ export function filterRecruitments(
 
 export type SortKey = CampaignSortKey
 
+// 서버가 정렬해 내려주므로 백엔드 SortKey에 있는 값만 노출한다.
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'deadline', label: '마감 임박순' },
   { value: 'popular', label: '조회순' },

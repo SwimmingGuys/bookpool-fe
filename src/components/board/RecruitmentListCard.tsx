@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { categoryLabel } from '@/types/recruitment'
 import type { Recruitment } from '@/types/recruitment'
 import {
   useFavoriteWithAuth,
@@ -93,7 +94,7 @@ export default function RecruitmentListCard({ recruitment }: RecruitmentListCard
       </h3>
 
       <p className="text-xs text-stone-500 mt-2 truncate">
-        {publisher} · {category}
+        {publisher} · {categoryLabel(category)}
       </p>
 
       <div className="mt-3 pt-3 border-t border-stone-100 flex items-baseline justify-between gap-2">

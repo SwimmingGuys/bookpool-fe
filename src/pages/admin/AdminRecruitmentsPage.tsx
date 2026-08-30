@@ -12,6 +12,7 @@ import {
   useAdminRecruitmentActions,
 } from '@/lib/adminRecruitments'
 import {
+  categoryLabel,
   PUBLISH_STATUS_LABELS,
   RECRUITMENT_SOURCE_LABELS,
   RECRUITMENT_TYPE_LABELS,
@@ -203,7 +204,7 @@ export default function AdminRecruitmentsPage() {
                     {plainTitle}
                   </Link>
                   <p className="mt-1 truncate text-xs text-stone-500">
-                    {r.publisher} · {r.category}
+                    {r.publisher} · {categoryLabel(r.category)}
                   </p>
                   <p className="mt-1 text-xs text-stone-400">
                     모집 {formatFullDate(r.recruitStartDate)} ~{' '}

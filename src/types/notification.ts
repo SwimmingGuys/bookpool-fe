@@ -1,9 +1,9 @@
-import type { RecruitmentType } from '@/types/recruitment'
+import type { Category, RecruitmentType } from '@/types/recruitment'
 
 // 알림을 받고 싶은 조건. 비어 있으면 알림을 받지 않는다.
 export interface NotificationSubscription {
   types: RecruitmentType[]
-  categories: string[]
+  categories: Category[]
   publishers: string[]
 }
 

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import type { RecruitmentType } from '@/types/recruitment'
+import { categoryLabel } from '@/types/recruitment'
+import type { Category, RecruitmentType } from '@/types/recruitment'
 import type { RecruitmentFilter } from '@/lib/recruitmentFilter'
 import {
   DEADLINE_LABELS,
@@ -41,7 +42,7 @@ export default function ActiveFilterTags({
 
   if (!hasFilters && !hasQuery) return null
 
-  const removeCategory = (cat: string) =>
+  const removeCategory = (cat: Category) =>
     onChange({ ...filter, categories: filter.categories.filter((c) => c !== cat) })
 
   const removeType = (type: RecruitmentType) =>
@@ -74,7 +75,7 @@ export default function ActiveFilterTags({
           color={CATEGORY_FILTER_COLOR}
           onRemove={() => removeCategory(cat)}
         >
-          {cat}
+          {categoryLabel(cat)}
         </SelectedTag>
       ))}
       {deadlineActive && (
