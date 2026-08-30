@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, ExternalLink, MessageSquareQuote, Star } from 'lucide-react'
+import { ClipboardCheck, Clock, ExternalLink, MessageSquareQuote, Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import type { Recruitment } from '@/types/recruitment'
 import { REVIEW_CHANNEL_LABELS } from '@/types/recruitment'
@@ -15,7 +15,10 @@ import {
   listRecentCampaigns,
 } from '@/lib/api/campaigns'
 import { useRecruitmentsByLoader } from '@/lib/recruitmentsSource'
+import { useFavorites } from '@/lib/recruitmentState'
 import { useMyReviews } from '@/lib/reviews'
+import { useAppliedCampaigns } from '@/lib/applicationState'
+import ApplicationList from '@/components/mypage/ApplicationList'
 import { formatRelativeTime } from '@/lib/date'
 import RecruitmentListCard from '@/components/board/RecruitmentListCard'
 import EmptyState from '@/components/ui/EmptyState'
@@ -28,6 +31,7 @@ import { useDocumentTitle } from '@/lib/useDocumentTitle'
 const PAGE_SIZE = 12
 
 const TABS = [
+  { value: 'applications', label: '신청한 공고', icon: ClipboardCheck },
   { value: 'recent', label: '최근에 본 공고', icon: Clock },
   { value: 'favorites', label: '즐겨찾기', icon: Star },
   { value: 'reviews', label: '내 서평', icon: MessageSquareQuote },
@@ -77,27 +81,35 @@ export default function MyRecruitmentsPage() {
   const { user } = useAuth()
   const userId = user?.id ?? null
 
+  const { favoritesVersion } = useFavorites()
+
   // ID만 들고 공고를 찾는 대신 서버 목록 엔드포인트를 그대로 쓴다.
   const recent = useRecruitmentsByLoader(
     () => (userId ? listRecentCampaigns() : Promise.resolve([])),
     [userId],
   )
+  // favoritesVersion을 deps에 넣어 별표를 누른 즉시 목록을 다시 받는다.
+  // 탭 전환은 리마운트가 아니라서, 이게 없으면 마운트 때 받은 목록이 그대로 남는다.
   const favorites = useRecruitmentsByLoader(
     () => (userId ? listBookmarkedCampaigns() : Promise.resolve([])),
-    [userId],
+    [userId, favoritesVersion],
   )
   const myReviews = useMyReviews()
+  const { appliedIds } = useAppliedCampaigns()
 
-  const [activeTab, setActiveTab] = useState<TabValue>('recent')
+  // 신청 → 발표 → 서평 순서라 신청한 공고를 첫 탭으로 둔다.
+  const [activeTab, setActiveTab] = useState<TabValue>('applications')
   const [query, setQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortValue>('recency')
   const [limits, setLimits] = useState<Record<TabValue, number>>({
+    applications: PAGE_SIZE,
     recent: PAGE_SIZE,
     favorites: PAGE_SIZE,
     reviews: PAGE_SIZE,
   })
 
   const totalCounts: Record<TabValue, number> = {
+    applications: appliedIds.length,
     recent: recent.recruitments.length,
     favorites: favorites.recruitments.length,
     reviews: myReviews.reviews.length,
@@ -116,7 +128,9 @@ export default function MyRecruitmentsPage() {
 
   const limit = limits[activeTab]
   const visible = filtered.slice(0, limit)
-  const hasMore = activeTab !== 'reviews' && filtered.length > limit
+  // 공고 목록 탭에서만 더 보기가 의미 있다.
+  const isRecruitmentTab = activeTab === 'recent' || activeTab === 'favorites'
+  const hasMore = isRecruitmentTab && filtered.length > limit
 
   // 검색어·정렬이 바뀌면 페이지 한도를 초기화한다. effect 대신 렌더 중
   // 이전 값과 비교해 처리한다.
@@ -124,7 +138,12 @@ export default function MyRecruitmentsPage() {
   const [prevResetKey, setPrevResetKey] = useState(resetKey)
   if (resetKey !== prevResetKey) {
     setPrevResetKey(resetKey)
-    setLimits({ recent: PAGE_SIZE, favorites: PAGE_SIZE, reviews: PAGE_SIZE })
+    setLimits({
+      applications: PAGE_SIZE,
+      recent: PAGE_SIZE,
+      favorites: PAGE_SIZE,
+      reviews: PAGE_SIZE,
+    })
   }
 
   const handleLoadMore = useCallback(() => {
@@ -190,7 +209,9 @@ export default function MyRecruitmentsPage() {
         })}
       </div>
 
-      {activeTab === 'reviews' ? (
+      {activeTab === 'applications' ? (
+        <ApplicationList />
+      ) : activeTab === 'reviews' ? (
         <MyReviewsTab
           reviews={myReviews.reviews}
           status={myReviews.status}

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, ExternalLink, Eye, Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import { RECRUITMENT_SOURCE_LABELS } from '@/types/recruitment'
+import { categoryLabel, RECRUITMENT_SOURCE_LABELS } from '@/types/recruitment'
 import { useRecruitment } from '@/lib/recruitmentsSource'
 import { useFavoriteWithAuth, useReadRecruitments } from '@/lib/recruitmentState'
 import { isNotFound } from '@/lib/api/errors'
@@ -16,6 +16,7 @@ import ShareButton from '@/components/ui/ShareButton'
 import ButtonLink from '@/components/ui/ButtonLink'
 import PageContainer from '@/components/layout/PageContainer'
 import ApplyBar from '@/components/recruitment/ApplyBar'
+import AddToCalendarButton from '@/components/recruitment/AddToCalendarButton'
 import RecruitmentConditions from '@/components/recruitment/RecruitmentConditions'
 import ReviewSection from '@/components/recruitment/ReviewSection'
 
@@ -78,7 +79,7 @@ export default function RecruitmentDetailPage() {
             >
               {recruitment.publisher}
             </Link>{' '}
-            · {recruitment.category}
+            · {categoryLabel(recruitment.category)}
           </p>
 
           <div className="flex shrink-0 items-center gap-2">
@@ -118,7 +119,10 @@ export default function RecruitmentDetailPage() {
       </section>
 
       <section className="mb-4 rounded-2xl border border-stone-200 bg-white p-5 sm:mb-6 sm:p-6">
-        <h2 className="mb-4 text-base font-semibold text-stone-800">일정</h2>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-stone-800">일정</h2>
+          <AddToCalendarButton recruitment={recruitment} />
+        </div>
         <dl className="grid grid-cols-1 gap-y-3 gap-x-6 text-sm sm:grid-cols-2">
           <InfoRow
             icon={<Calendar className="h-4 w-4" />}
