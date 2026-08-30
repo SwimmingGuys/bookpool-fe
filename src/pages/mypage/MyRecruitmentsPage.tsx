@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ClipboardCheck, Clock, ExternalLink, MessageSquareQuote, Star } from 'lucide-react'
 import { cn } from '@/lib/cn'
-import type { Recruitment } from '@/types/recruitment'
 import { REVIEW_CHANNEL_LABELS } from '@/types/recruitment'
 import {
   REVIEW_SUBMISSION_STATUS_LABELS,
@@ -20,15 +19,12 @@ import { useMyReviews } from '@/lib/reviews'
 import { useAppliedCampaigns } from '@/lib/applicationState'
 import ApplicationList from '@/components/mypage/ApplicationList'
 import { formatRelativeTime } from '@/lib/date'
-import RecruitmentListCard from '@/components/board/RecruitmentListCard'
+import RecruitmentListRow from '@/components/board/RecruitmentListRow'
 import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
-import SearchInput from '@/components/ui/SearchInput'
 import StarRating from '@/components/ui/StarRating'
-import { RecruitmentGridSkeleton } from '@/components/ui/Skeleton'
+import { RecruitmentRowListSkeleton } from '@/components/ui/Skeleton'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
-
-const PAGE_SIZE = 12
 
 const TABS = [
   { value: 'applications', label: '신청한 공고', icon: ClipboardCheck },
@@ -38,42 +34,10 @@ const TABS = [
 ] as const
 type TabValue = (typeof TABS)[number]['value']
 
-const SORT_OPTIONS = [
-  { value: 'recency', label: '최근 활동순' },
-  { value: 'deadline', label: '마감 임박순' },
-  { value: 'title', label: '제목순' },
-] as const
-type SortValue = (typeof SORT_OPTIONS)[number]['value']
-
 const submissionStatusStyles: Record<ReviewSubmissionStatus, string> = {
   submitted: 'bg-stone-100 text-stone-600',
   approved: 'bg-orange-50 text-orange-700',
   rejected: 'bg-red-50 text-red-600',
-}
-
-function matchesQuery(r: Recruitment, q: string): boolean {
-  if (!q) return true
-  const lower = q.toLowerCase()
-  return (
-    r.title.toLowerCase().includes(lower) ||
-    r.bookTitle.toLowerCase().includes(lower) ||
-    r.publisher.toLowerCase().includes(lower)
-  )
-}
-
-function sortRecruitments(items: Recruitment[], sortBy: SortValue): Recruitment[] {
-  if (sortBy === 'recency') return items
-  const sorted = [...items]
-  if (sortBy === 'deadline') {
-    sorted.sort((a, b) => {
-      const aDays = a.daysRemaining < 0 ? Infinity : a.daysRemaining
-      const bDays = b.daysRemaining < 0 ? Infinity : b.daysRemaining
-      return aDays - bDays
-    })
-  } else if (sortBy === 'title') {
-    sorted.sort((a, b) => a.title.localeCompare(b.title, 'ko'))
-  }
-  return sorted
 }
 
 export default function MyRecruitmentsPage() {
@@ -99,14 +63,6 @@ export default function MyRecruitmentsPage() {
 
   // 신청 → 발표 → 서평 순서라 신청한 공고를 첫 탭으로 둔다.
   const [activeTab, setActiveTab] = useState<TabValue>('applications')
-  const [query, setQuery] = useState('')
-  const [sortBy, setSortBy] = useState<SortValue>('recency')
-  const [limits, setLimits] = useState<Record<TabValue, number>>({
-    applications: PAGE_SIZE,
-    recent: PAGE_SIZE,
-    favorites: PAGE_SIZE,
-    reviews: PAGE_SIZE,
-  })
 
   const totalCounts: Record<TabValue, number> = {
     applications: appliedIds.length,
@@ -115,58 +71,11 @@ export default function MyRecruitmentsPage() {
     reviews: myReviews.reviews.length,
   }
 
+  // 최근 본 공고는 최대 50건, 즐겨찾기도 개인의 유한한 목록이라 검색·정렬·페이징을 두지 않는다.
+  // 네 탭 중 두 곳에서만 툴바가 나타났다 사라져 탭을 옮길 때마다 화면 구성이 바뀌던 것이
+  // 이 화면이 어수선하던 가장 큰 이유였다.
   const active =
     activeTab === 'recent' ? recent : activeTab === 'favorites' ? favorites : null
-
-  const activeRecruitments = active?.recruitments
-  const filtered = useMemo(() => {
-    const baseItems = activeRecruitments ?? []
-    const q = query.trim()
-    const matched = q ? baseItems.filter((r) => matchesQuery(r, q)) : baseItems
-    return sortRecruitments(matched, sortBy)
-  }, [activeRecruitments, query, sortBy])
-
-  const limit = limits[activeTab]
-  const visible = filtered.slice(0, limit)
-  // 공고 목록 탭에서만 더 보기가 의미 있다.
-  const isRecruitmentTab = activeTab === 'recent' || activeTab === 'favorites'
-  const hasMore = isRecruitmentTab && filtered.length > limit
-
-  // 검색어·정렬이 바뀌면 페이지 한도를 초기화한다. effect 대신 렌더 중
-  // 이전 값과 비교해 처리한다.
-  const resetKey = `${query} ${sortBy}`
-  const [prevResetKey, setPrevResetKey] = useState(resetKey)
-  if (resetKey !== prevResetKey) {
-    setPrevResetKey(resetKey)
-    setLimits({
-      applications: PAGE_SIZE,
-      recent: PAGE_SIZE,
-      favorites: PAGE_SIZE,
-      reviews: PAGE_SIZE,
-    })
-  }
-
-  const handleLoadMore = useCallback(() => {
-    setLimits((prev) => ({ ...prev, [activeTab]: prev[activeTab] + PAGE_SIZE }))
-  }, [activeTab])
-
-  const sentinelRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!hasMore) return
-    const node = sentinelRef.current
-    if (!node) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) handleLoadMore()
-      },
-      { rootMargin: '300px' },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [hasMore, handleLoadMore])
-
-  const hasFilter = query.trim().length > 0
 
   return (
     <div>
@@ -217,38 +126,20 @@ export default function MyRecruitmentsPage() {
           status={myReviews.status}
           onRetry={myReviews.reload}
         />
+      ) : active?.status === 'loading' ? (
+        <div className="mt-5">
+          <RecruitmentRowListSkeleton count={4} />
+        </div>
+      ) : (active?.recruitments.length ?? 0) === 0 ? (
+        <div className="mt-5">
+          <EmptyForTab tab={activeTab} />
+        </div>
       ) : (
-        <>
-          <Toolbar
-            query={query}
-            onQueryChange={setQuery}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-          />
-
-          {active?.status === 'loading' ? (
-            <RecruitmentGridSkeleton />
-          ) : visible.length === 0 ? (
-            <EmptyForTab tab={activeTab} hasFilter={hasFilter} />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {visible.map((r) => (
-                  <RecruitmentListCard key={r.id} recruitment={r} />
-                ))}
-              </div>
-              {hasMore && (
-                <div
-                  ref={sentinelRef}
-                  aria-hidden
-                  className="mt-4 flex h-10 items-center justify-center text-xs text-stone-400"
-                >
-                  불러오는 중…
-                </div>
-              )}
-            </>
-          )}
-        </>
+        <div className="mt-5 flex flex-col gap-3">
+          {active?.recruitments.map((r) => (
+            <RecruitmentListRow key={r.id} recruitment={r} />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -266,7 +157,7 @@ function MyReviewsTab({
   if (status === 'loading') {
     return (
       <div className="mt-5">
-        <RecruitmentGridSkeleton count={3} />
+        <RecruitmentRowListSkeleton count={3} />
       </div>
     )
   }
@@ -355,59 +246,7 @@ function MyReviewsTab({
   )
 }
 
-function Toolbar({
-  query,
-  onQueryChange,
-  sortBy,
-  onSortChange,
-}: {
-  query: string
-  onQueryChange: (next: string) => void
-  sortBy: SortValue
-  onSortChange: (next: SortValue) => void
-}) {
-  return (
-    <div className="my-5 flex flex-col gap-2 sm:flex-row sm:items-center">
-      <SearchInput
-        value={query}
-        onChange={onQueryChange}
-        placeholder="제목, 도서, 출판사 검색"
-        className="flex-1 sm:max-w-md"
-      />
-
-      <div className="relative">
-        <select
-          value={sortBy}
-          onChange={(e) => onSortChange(e.target.value as SortValue)}
-          aria-label="정렬"
-          className="cursor-pointer appearance-none rounded-lg border border-stone-200 bg-white py-2 pl-3 pr-8 text-sm font-medium text-stone-700 transition-colors hover:border-stone-300 focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-100"
-        >
-          {SORT_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <span
-          aria-hidden
-          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-stone-400"
-        >
-          ▾
-        </span>
-      </div>
-    </div>
-  )
-}
-
-function EmptyForTab({ tab, hasFilter }: { tab: TabValue; hasFilter: boolean }) {
-  if (hasFilter) {
-    return (
-      <EmptyState
-        title="검색 조건에 맞는 공고가 없어요."
-        description="검색어를 다시 입력해 보세요."
-      />
-    )
-  }
+function EmptyForTab({ tab }: { tab: TabValue }) {
   const title =
     tab === 'recent' ? '아직 본 공고가 없어요.' : '아직 즐겨찾기한 공고가 없어요.'
   return (
@@ -418,7 +257,7 @@ function EmptyForTab({ tab, hasFilter }: { tab: TabValue; hasFilter: boolean }) 
           to="/board"
           className="text-orange-600 no-underline hover:text-orange-700"
         >
-          보드에서 공고 둘러보기
+          전체 모집 목록 둘러보기
         </Link>
       }
     />

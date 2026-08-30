@@ -10,6 +10,7 @@ import {
   validatePasswordConfirm,
 } from '@/lib/authValidation'
 import FormField from '@/components/auth/FormField'
+import { Lock } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import SectionCard from '@/components/ui/SectionCard'
 import { useDocumentTitle } from '@/lib/useDocumentTitle'
@@ -26,8 +27,32 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AccountSummary nickname={user.nickname} email={user.email} />
       <ProfileSection key={user.id} />
       <PasswordSection />
+    </div>
+  )
+}
+
+/**
+ * 지금 로그인한 계정이 누구인지 한 줄로 보여준다.
+ * 이메일은 바꿀 수 없는데도 비활성 입력칸으로 그려져 폼 자리만 차지하고 있었다.
+ */
+function AccountSummary({ nickname, email }: { nickname: string; email: string }) {
+  const initial = nickname.trim().charAt(0) || '?'
+
+  return (
+    <div className="flex items-center gap-4 rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
+      <span
+        aria-hidden
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-50 text-lg font-bold text-orange-600"
+      >
+        {initial}
+      </span>
+      <div className="min-w-0">
+        <p className="truncate text-base font-bold text-stone-800">{nickname}</p>
+        <p className="truncate text-sm text-stone-500">{email}</p>
+      </div>
     </div>
   )
 }
@@ -76,14 +101,6 @@ function ProfileSection() {
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <FormField
-          label="이메일"
-          type="email"
-          value={user.email}
-          readOnly
-          disabled
-        />
-
-        <FormField
           label="닉네임"
           type="text"
           value={nickname}
@@ -128,6 +145,8 @@ function ProfileSection() {
 
 function PasswordSection() {
   const { changePassword } = useAuth()
+  // 비밀번호 변경은 가끔 하는 일인데 입력칸 세 개가 늘 펼쳐져 계정 화면의 절반을 차지했다.
+  const [open, setOpen] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -161,6 +180,7 @@ function PasswordSection() {
       await changePassword({ currentPassword, newPassword })
       showToast('비밀번호가 변경되었습니다.', 'success')
       reset()
+      setOpen(false)
     } catch (err) {
       if (err instanceof AuthError && err.code === 'PASSWORD_INCORRECT') {
         setErrors({ currentPassword: err.message })
@@ -172,6 +192,25 @@ function PasswordSection() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  if (!open) {
+    return (
+      <SectionCard
+        title="비밀번호"
+        description="현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다."
+        action={
+          <Button variant="secondary" onClick={() => setOpen(true)}>
+            <Lock className="h-4 w-4" />
+            변경하기
+          </Button>
+        }
+      >
+        <p className="text-sm text-stone-500">
+          영문과 숫자를 포함해 {PASSWORD_MIN_LENGTH}자 이상으로 설정할 수 있어요.
+        </p>
+      </SectionCard>
+    )
   }
 
   return (
@@ -235,7 +274,19 @@ function PasswordSection() {
           </p>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            disabled={submitting}
+            onClick={() => {
+              reset()
+              setOpen(false)
+            }}
+          >
+            취소
+          </Button>
           <Button type="submit" size="lg" disabled={submitting}>
             {submitting ? '변경 중...' : '비밀번호 변경'}
           </Button>
